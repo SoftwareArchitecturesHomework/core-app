@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  externalId   String
+  name         String
+  manager      User?         @relation("ManagerEmployee", fields: [managerId], references: [id])
+  managerId    Int?
+  employee     User[]        @relation("ManagerEmployee")
+  userProjects UserProject[]
+}
+
+model Project {
+  id           Int           @id @default(autoincrement())
+  name         String
+  startDate    DateTime
+  endDate      DateTime?
+  tasks        Task[]
+  userProjects UserProject[]
+}
+
+model UserProject {
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId Int
+
+  @@id([projectId, userId])
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  type        TaskType
+  name        String?
+  description String?
+  project     Project? @relation(fields: [projectId], references: [id])
+  projectId   Int?
+}
+
+enum TaskType {
+  VACATION
+  MEETING
+  TASK
+}
