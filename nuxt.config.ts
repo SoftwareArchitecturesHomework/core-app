@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   css: ['~/assets/css/main.css'],
   devtools: { enabled: true },
-  modules: ['@nuxt/ui', 'vuetify-nuxt-module'],
+  modules: ['@nuxt/ui', 'vuetify-nuxt-module', '@sidebase/nuxt-auth'],
 
   imports: {},
   vite: {
@@ -24,5 +24,49 @@ export default defineNuxtConfig({
       prefixComposables: true,
     },
     vuetifyOptions: {},
+  },
+
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        types: [
+          "node",
+          "next-auth",
+          "@sidebase/nuxt-auth"
+        ],
+        typeRoots: [
+          "./types",
+          "./node_modules/@types"
+        ]
+      },
+      include: [
+        "types/**/*.d.ts"
+      ]
+    }
+  },
+
+  runtimeConfig: {
+    auth: {
+      origin: process.env.AUTH_ORIGIN || 'http://localhost:3000',
+      baseUrl: '/api/auth',
+    },
+  },
+
+  auth: {
+    provider: {
+      type: 'authjs'
+    },
+
+    // app origin
+    origin: 'http://localhost:3000',
+
+    // MUST be only the path
+    baseURL: '/api/auth',
+
+    globalAppMiddleware: false,
+
+    // these are fine to keep
+    disableInternalRouting: true,
+    disableServerSideAuth: true,
   },
 })
