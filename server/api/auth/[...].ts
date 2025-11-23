@@ -38,7 +38,6 @@ export default NuxtAuthHandler({
             try {
                 if (new URL(url).origin === safeBase) return url
             } catch {
-                // ignore invalid url parse
             }
             return safeBase
         },
