@@ -15,6 +15,11 @@ export default NuxtAuthHandler({
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            authorization: {
+                params: {
+                    prompt: 'select_account',
+                },
+            },
         }),
     ],
 
@@ -33,7 +38,6 @@ export default NuxtAuthHandler({
             try {
                 if (new URL(url).origin === safeBase) return url
             } catch {
-                // ignore invalid url parse
             }
             return safeBase
         },
