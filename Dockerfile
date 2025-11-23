@@ -5,22 +5,27 @@ FROM node:20-bookworm-slim
 ENV NUXT_HOST=0.0.0.0
 ENV NUXT_PORT=3000
 
-# 3. Munkakönyvtár beállítása
+# 3. pnpm telepítése
+RUN npm install -g pnpm
+
+# 4. Munkakönyvtár beállítása
 WORKDIR /app
 
+# 5. Függőségek másolása és telepítése
+# Először csak a package.json és pnpm fájlokat másoljuk a jobb cache-elés érdekében.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# 4. Függőségek másolása és telepítése
-# Először csak a package.json fájlokat másoljuk a jobb cache-elés érdekében.
-COPY package*.json ./
+# 6. Telepítés
+RUN pnpm install
 
-# 5. Telepítés
-RUN npm install
-
-# 6. A teljes projektkód másolása
+# 7. A teljes projektkód másolása
 COPY . .
 
-# 7. Port megnyitása
+# 7.5. Prisma Client generálása
+RUN pnpm prisma generate
+
+# 8. Port megnyitása
 EXPOSE 3000
 
-# 8. Fejlesztői szerver indítása
-CMD [ "npm", "run", "dev" ]
+# 9. Fejlesztői szerver indítása
+CMD ["pnpm", "run", "dev"]

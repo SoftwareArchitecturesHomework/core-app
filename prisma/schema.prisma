@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -12,13 +11,54 @@ datasource db {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  externalId   String
-  name         String
-  manager      User?         @relation("ManagerEmployee", fields: [managerId], references: [id])
-  managerId    Int?
-  employee     User[]        @relation("ManagerEmployee")
-  userProjects UserProject[]
+  id            Int           @id @default(autoincrement())
+  email         String?       @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  manager       User?         @relation("ManagerEmployee", fields: [managerId], references: [id])
+  managerId     Int?
+  employee      User[]        @relation("ManagerEmployee")
+  userProjects  UserProject[]
+  accounts      Account[]
+  sessions      Session[]
+  role          Role          @default(EMPLOYEE)
+}
+
+model Account {
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Project {
@@ -46,6 +86,12 @@ model Task {
   description String?
   project     Project? @relation(fields: [projectId], references: [id])
   projectId   Int?
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
 }
 
 enum TaskType {
