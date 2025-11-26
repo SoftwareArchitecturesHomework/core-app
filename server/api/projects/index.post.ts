@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
 
     const body = await readBody(event) as ProjectCreationDto
 
-    const { projectName, startDate, endDate } = body
+    const { projectName, startDate, plannedEndDate } = body
 
     if (!projectName || !startDate) {
         throw createError({
@@ -32,12 +32,24 @@ export default defineEventHandler(async (event) => {
         })
     }
 
+    if (plannedEndDate) {
+        const startDateObj = new Date(startDate)
+        const endDateObj = new Date(plannedEndDate)
+
+        if (endDateObj <= startDateObj) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: 'Planned end date must be after start date'
+            })
+        }
+    }
+
     try {
         const project = await prisma.project.create({
             data: {
                 name: projectName,
                 startDate: new Date(startDate),
-                endDate: endDate ? new Date(endDate) : null,
+                plannedEndDate: plannedEndDate ? new Date(plannedEndDate) : null,
                 ownerId: user.id,
                 userProjects: {
                     create: {
