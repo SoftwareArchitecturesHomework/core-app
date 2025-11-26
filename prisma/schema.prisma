@@ -23,6 +23,10 @@ model User {
   accounts      Account[]
   sessions      Session[]
   role          Role          @default(EMPLOYEE)
+  ownedProjects Project[]     @relation("ProjectOwner")
+  timeEntries   TimeEntry[]
+  tasks         Task[]        @relation("TaskAssignees")
+  createdTasks  Task[]        @relation("TaskCreator")
 }
 
 model Account {
@@ -62,12 +66,15 @@ model VerificationToken {
 }
 
 model Project {
-  id           Int           @id @default(autoincrement())
-  name         String
-  startDate    DateTime
-  endDate      DateTime?
-  tasks        Task[]
-  userProjects UserProject[]
+  id             Int           @id @default(autoincrement())
+  name           String
+  startDate      DateTime
+  endDate        DateTime?
+  plannedEndDate DateTime?
+  ownerId        Int
+  owner          User          @relation("ProjectOwner", fields: [ownerId], references: [id])
+  tasks          Task[]        @relation("ProjectTasks")
+  userProjects   UserProject[]
 }
 
 model UserProject {
@@ -80,12 +87,30 @@ model UserProject {
 }
 
 model Task {
-  id          Int      @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   type        TaskType
+  creatorId   Int
+  creator     User        @relation("TaskCreator", fields: [creatorId], references: [id])
   name        String?
   description String?
-  project     Project? @relation(fields: [projectId], references: [id])
+  isDone      Boolean     @default(false)
+  project     Project?    @relation("ProjectTasks", fields: [projectId], references: [id])
   projectId   Int?
+  timeEntries TimeEntry[]
+  assignee    User?       @relation("TaskAssignees", fields: [assigneeId], references: [id])
+  assigneeId  Int?
+}
+
+model TimeEntry {
+  id     Int  @id @default(autoincrement())
+  task   Task @relation(fields: [taskId], references: [id])
+  taskId Int
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  date  DateTime
+  hours Float
+  note  String?
 }
 
 enum Role {
@@ -98,4 +123,5 @@ enum TaskType {
   VACATION
   MEETING
   TASK
+  INDIVIDUALTASK
 }
