@@ -1,8 +1,10 @@
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  css: ['./app/assets/css/main.css'],
+  css: [
+    './app/assets/css/main.css'],
   modules: ['@nuxt/ui', '@sidebase/nuxt-auth'],
 
   imports: {},
@@ -18,12 +20,6 @@ export default defineNuxtConfig({
     fontsource: false,
 
     provider: 'local',
-  },
-  vuetify: {
-    moduleOptions: {
-      prefixComposables: true,
-    },
-    vuetifyOptions: {},
   },
 
   typescript: {
@@ -45,28 +41,21 @@ export default defineNuxtConfig({
     }
   },
 
-  runtimeConfig: {
-    auth: {
-      origin: process.env.AUTH_ORIGIN || 'http://localhost:3000',
-      baseUrl: '/api/auth',
-    },
-  },
-
   auth: {
     provider: {
-      type: 'authjs'
+      type: 'authjs',
+      trustHosts: true, // This is fine now
+      defaultProvider: 'google',
+      addDefaultCallbackUrl: true,
     },
-
-    // app origin
-    origin: 'http://localhost:3000',
-
-    // MUST be only the path
+    originEnvKey: 'AUTH_ORIGIN',
     baseURL: '/api/auth',
 
-    globalAppMiddleware: false,
+    disableServerSideAuth: false,
 
-    // these are fine to keep
-    disableInternalRouting: true,
-    disableServerSideAuth: true,
+    sessionRefresh: {
+      enablePeriodically: true,
+      enableOnWindowFocus: true,
+    }
   },
 })
