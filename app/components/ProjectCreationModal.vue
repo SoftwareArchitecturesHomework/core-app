@@ -8,6 +8,8 @@ const newProject = reactive({
     projectName: '',
 })
 
+const isOpen = ref(false)
+
 const startDate = shallowRef<DateValue>(today(getLocalTimeZone()))
 const endDate = shallowRef<DateValue | null>(null)
 
@@ -22,6 +24,7 @@ function resetForm() {
 
 function onCancel() {
     resetForm()
+    isOpen.value = false
 }
 
 async function onSubmit() {
@@ -29,9 +32,27 @@ async function onSubmit() {
         toast.add({
             title: 'Validation Error',
             description: 'Project name and start date are required',
-            color: 'primary'
+            color: 'error',
+            icon: 'i-heroicons-exclamation-circle'
         })
         return
+    }
+
+    // Validate that planned end date is after start date
+    if (endDate.value) {
+        const startDateObj = new Date(startDate.value.toString())
+        const endDateObj = new Date(endDate.value.toString())
+
+        if (endDateObj <= startDateObj) {
+            toast.add({
+                title: 'Validation Error',
+                description: 'Planned end date must be after start date',
+                color: 'error',
+                icon: 'i-heroicons-exclamation-circle'
+
+            })
+            return
+        }
     }
 
     isSubmitting.value = true
@@ -40,7 +61,7 @@ async function onSubmit() {
         const dto: ProjectCreationDto = {
             projectName: newProject.projectName,
             startDate: new Date(startDate.value.toString()),
-            endDate: endDate.value ? new Date(endDate.value.toString()) : null
+            plannedEndDate: endDate.value ? new Date(endDate.value.toString()) : null
         }
 
         const project = await $fetch('/api/projects', {
@@ -51,10 +72,13 @@ async function onSubmit() {
         toast.add({
             title: 'Success',
             description: 'Project created successfully',
-            color: 'primary'
+            color: 'primary',
+            icon: 'i-heroicons-check-circle'
         })
 
         resetForm()
+        isOpen.value = false
+
     } catch (error: any) {
         console.error('Project creation error:', error)
         const errorMessage = error?.data?.statusMessage || error?.statusMessage || error?.message || 'Failed to create project'
@@ -70,7 +94,7 @@ async function onSubmit() {
 </script>
 
 <template>
-    <UModal>
+    <UModal v-model:open="isOpen">
         <UButton color="primary" variant="solid">
             Create New Project
         </UButton>

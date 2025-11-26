@@ -29,31 +29,35 @@ const userMenuItems = [
 </script>
 
 <template>
-    <UHeader :toggle="false">
-        <template #title>
-            <NuxtLink to="/" class="text-xl font-bold">
-                WorkPlanner
-            </NuxtLink>
-        </template>
+    <ClientOnly>
+        <UHeader :toggle="false">
+            <template #title>
+                <NuxtLink to="/" class="text-xl font-bold">
+                    WorkPlanner
+                </NuxtLink>
+            </template>
 
-        <template #default>
-            <UNavigationMenu :items="links" class="w-60 space-x-6" />
-        </template>
+            <template #default>
+                <UNavigationMenu :items="links" class="w-60 space-x-6" />
+            </template>
 
-        <template #right>
-            <div v-if="status === 'authenticated'" class="flex items-center gap-3 whitespace-nowrap">
-                <div class="text-sm whitespace-nowrap">
-                    {{ session?.user?.name || session?.user?.email || 'User' }}
-                </div>
+            <template #right>
+                <ClientOnly>
+                    <div v-if="status === 'authenticated'" class="flex items-center gap-3 whitespace-nowrap">
+                        <div class="text-sm whitespace-nowrap">
+                            {{ session?.user?.name || session?.user?.email || 'User' }}
+                        </div>
 
-                <UDropdownMenu :items="userMenuItems" :popper="{ placement: 'bottom-end' }">
-                    <UAvatar v-if="session?.user?.image" :src="session.user.image"
-                        :alt="session.user.name || 'User avatar'" size="lg"
-                        class="cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all" />
-                </UDropdownMenu>
-            </div>
-        </template>
-    </UHeader>
+                        <UDropdownMenu :items="userMenuItems" :popper="{ placement: 'bottom-end' }">
+                            <UAvatar v-if="session?.user?.image" :src="session.user.image"
+                                :alt="session.user.name || 'User avatar'" size="lg"
+                                class="cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all" />
+                        </UDropdownMenu>
+                    </div>
+                </ClientOnly>
+            </template>
+        </UHeader>
+    </ClientOnly>
 
     <slot></slot>
 </template>
