@@ -1,13 +1,25 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+import type { ExtendedUser } from '~~/types/extended-user'
 
 const { data: session, status, signOut, signIn } = useAuth()
+const user = session?.value?.user as ExtendedUser | undefined
 const route = useRoute()
 
-const links = computed<NavigationMenuItem[]>(() => [
-    { label: 'Projects', to: '/projects', leadingIcon: 'project' },
-    { label: 'Calendar', to: '/calendar', leadingIcon: 'calendar' }
-])
+const links = computed<NavigationMenuItem[]>(() => {
+    const items: NavigationMenuItem[] = [
+        { label: 'Projects', to: '/projects', icon: 'i-heroicons-folder' },
+        { label: 'Calendar', to: '/calendar', icon: 'i-heroicons-calendar' },
+    ]
+
+    if (user?.role === 'MANAGER' || user?.role === 'ADMIN') {
+        items.push({ label: 'Approvals', to: '/approvals', icon: 'i-heroicons-check-circle' })
+        items.push({ label: 'Reports', to: '/reports', icon: 'i-heroicons-chart-bar' })
+        items.push({ label: 'Administration', to: '/administration', icon: 'i-heroicons-clipboard-document-check' })
+    }
+
+    return items
+})
 
 const userMenuItems = [
     [{
@@ -26,6 +38,7 @@ const userMenuItems = [
         onSelect: () => signOut({ callbackUrl: '/login' })
     }]
 ]
+
 </script>
 
 <template>
@@ -38,7 +51,7 @@ const userMenuItems = [
             </template>
 
             <template #default>
-                <UNavigationMenu :items="links" class="w-60 space-x-6" />
+                <UNavigationMenu :items="links" class="space-x-6" />
             </template>
 
             <template #right>
