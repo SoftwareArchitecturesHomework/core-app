@@ -28,5 +28,8 @@
     "@sidebase/nuxt-auth": "^1.1.0",
     "@types/node": "^24.10.1",
     "vuetify": "^3.10.5"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 }
