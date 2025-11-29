@@ -28,6 +28,10 @@ async function cleanup() {
     where: { userId: { notIn: idsToExclude } },
   });
 
+  await prisma.meetingParticipant.deleteMany({
+    where: { userId: { notIn: idsToExclude } },
+  });
+
   await prisma.task.deleteMany({
     where: {
       OR: [
@@ -165,6 +169,14 @@ async function seed() {
       isDone: false,
       projectId: projectA.id,
     },
+  });
+
+  await prisma.meetingParticipant.createMany({
+    data: [
+      { meetingId: task2.id, userId: adminUser.id },
+      { meetingId: task2.id, userId: managerUser.id },
+      { meetingId: task2.id, userId: employeeUser.id },
+    ],
   });
 
   await prisma.timeEntry.createMany({

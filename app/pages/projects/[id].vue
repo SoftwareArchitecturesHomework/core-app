@@ -97,7 +97,7 @@ function closeProject() {
                 <UIcon name="i-heroicons-exclamation-triangle" class="w-16 h-16 mx-auto text-red-500 mb-4" />
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error Loading Project</h3>
                 <p class="text-gray-600 dark:text-gray-400">{{ error.statusMessage || 'Failed to load project details'
-                    }}</p>
+                }}</p>
                 <UButton class="mt-4" to="/projects">
                     Back to Projects
                 </UButton>
@@ -237,18 +237,22 @@ function closeProject() {
 
                 <div v-if="project.tasks.length > 0" class="divide-y divide-gray-200 dark:divide-gray-800">
                     <div v-for="task in project.tasks" :key="task.id" class="py-4 first:pt-0 last:pb-0">
-                        <div class="flex items-start gap-3">
-                            <UBadge :color="getTaskTypeColor(task.type)" variant="soft">
-                                {{ getTaskTypeLabel(task.type) }}
-                            </UBadge>
-                            <div class="flex-1">
-                                <p class="font-semibold text-gray-900 dark:text-white">{{ task.name || 'Untitled Task'
-                                    }}</p>
-                                <p v-if="task.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {{ task.description }}
-                                </p>
+                        <NuxtLink :to="`/tasks/${task.id}`"
+                            class="block hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-md">
+                            <div class="flex items-start gap-3">
+                                <UBadge :color="getTaskTypeColor(task.type)" variant="soft">
+                                    {{ getTaskTypeLabel(task.type) }}
+                                </UBadge>
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-900 dark:text-white">
+                                        {{ task.name || 'UntitledTask' }}
+                                    </p>
+                                    <p v-if="task.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                        {{ task.description }}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
+                        </NuxtLink>
                     </div>
                 </div>
                 <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
