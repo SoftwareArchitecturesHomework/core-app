@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { UserDropdownOption } from '~~/types/user-dropdown-option';
+
 const props = defineProps<{
     projectId: number
 }>()
@@ -10,19 +12,12 @@ const emit = defineEmits<{
 const isSubmitting = ref(false)
 const isOpen = defineModel<boolean>({ default: false })
 const toast = useToast()
-const selectedUser = ref<{ label: string; value: number } | undefined>(undefined)
+const selectedUser = ref<UserDropdownOption | undefined>(undefined)
 
 const { data: availableUsers } = await useFetch('/api/users', {
     query: {
         excludeProjectId: props.projectId
     }
-})
-
-const userOptions = computed(() => {
-    return availableUsers.value?.map(user => ({
-        label: `${user.name} (${user.email})`,
-        value: user.id
-    })) || []
 })
 
 function onCancel() {
@@ -85,8 +80,7 @@ async function onSubmit() {
             <div class="flex flex-col gap-4">
                 <div class="space-y-2">
                     <label class="block text-sm font-medium">Select User *</label>
-                    <USelectMenu v-model="selectedUser" :items="userOptions" placeholder="Search for a user..."
-                        searchable class="w-full" />
+                    <UserSearchDropdown v-model="selectedUser" :userOptions="availableUsers || []" />
                 </div>
 
                 <div class="flex justify-end gap-2 pt-4">

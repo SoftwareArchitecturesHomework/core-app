@@ -11,22 +11,23 @@ datasource db {
 }
 
 model User {
-  id            Int           @id @default(autoincrement())
-  email         String?       @unique
-  name          String?
-  image         String?
-  emailVerified DateTime?
-  manager       User?         @relation("ManagerEmployee", fields: [managerId], references: [id])
-  managerId     Int?
-  employee      User[]        @relation("ManagerEmployee")
-  userProjects  UserProject[]
-  accounts      Account[]
-  sessions      Session[]
-  role          Role          @default(EMPLOYEE)
-  ownedProjects Project[]     @relation("ProjectOwner")
-  timeEntries   TimeEntry[]
-  tasks         Task[]        @relation("TaskAssignees")
-  createdTasks  Task[]        @relation("TaskCreator")
+  id                  Int                  @id @default(autoincrement())
+  email               String?              @unique
+  name                String?
+  image               String?
+  emailVerified       DateTime?
+  manager             User?                @relation("ManagerEmployee", fields: [managerId], references: [id])
+  managerId           Int?
+  employee            User[]               @relation("ManagerEmployee")
+  userProjects        UserProject[]
+  accounts            Account[]
+  sessions            Session[]
+  role                Role                 @default(EMPLOYEE)
+  ownedProjects       Project[]            @relation("ProjectOwner")
+  timeEntries         TimeEntry[]
+  tasks               Task[]               @relation("TaskAssignees")
+  createdTasks        Task[]               @relation("TaskCreator")
+  meetingParticipants MeetingParticipant[]
 }
 
 model Account {
@@ -86,19 +87,30 @@ model UserProject {
   @@id([projectId, userId])
 }
 
+model MeetingParticipant {
+  id        Int  @id @default(autoincrement())
+  meetingId Int
+  userId    Int
+  meeting   Task @relation("MeetingParticipants", fields: [meetingId], references: [id])
+  user      User @relation(fields: [userId], references: [id])
+
+  @@unique([meetingId, userId])
+}
+
 model Task {
-  id          Int         @id @default(autoincrement())
-  type        TaskType
-  creatorId   Int
-  creator     User        @relation("TaskCreator", fields: [creatorId], references: [id])
-  name        String?
-  description String?
-  isDone      Boolean     @default(false)
-  project     Project?    @relation("ProjectTasks", fields: [projectId], references: [id])
-  projectId   Int?
-  timeEntries TimeEntry[]
-  assignee    User?       @relation("TaskAssignees", fields: [assigneeId], references: [id])
-  assigneeId  Int?
+  id                  Int                  @id @default(autoincrement())
+  type                TaskType
+  creatorId           Int
+  creator             User                 @relation("TaskCreator", fields: [creatorId], references: [id])
+  name                String?
+  description         String?
+  isDone              Boolean              @default(false)
+  project             Project?             @relation("ProjectTasks", fields: [projectId], references: [id])
+  projectId           Int?
+  timeEntries         TimeEntry[]
+  assignee            User?                @relation("TaskAssignees", fields: [assigneeId], references: [id])
+  assigneeId          Int?
+  meetingParticipants MeetingParticipant[] @relation("MeetingParticipants")
 }
 
 model TimeEntry {
