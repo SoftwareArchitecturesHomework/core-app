@@ -240,12 +240,12 @@ function openAssigneeModal() {
                                     </UButton>
                                 </div>
                             </div>
-                            <div v-if="task.type === 'MEETING'" @click="openAssigneeModal" class="cursor-pointer group">
+                            <div v-if="task.type === 'MEETING'" @click="openAssigneeModal" class="cursor-pointer">
                                 <label
                                     class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Participants</label>
-                                <div v-if="task.meetingParticipants && task.meetingParticipants.length > 0"
-                                    class="flex items-center gap-2 mt-2 p-2 rounded-lg transition-colors group-hover:bg-gray-100 dark:group-hover:bg-gray-800">
-                                    <div v-for="participant in task.meetingParticipants" :key="participant.id">
+                                <div v-if="task.meetingParticipants && task.meetingParticipants.length > 0">
+                                    <div v-for="participant in task.meetingParticipants" :key="participant.id"
+                                        class="flex items-center gap-2 mt-2 p-2 rounded-lg transition-colors">
                                         <UAvatar :src="participant.user.image || undefined"
                                             :alt="participant.user.name || 'User'" size="sm" />
                                         <div class="flex-1 min-w-0">
@@ -255,9 +255,6 @@ function openAssigneeModal() {
                                             <p class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
                                                 participant.user.email }}</p>
                                         </div>
-                                        <UIcon name="i-heroicons-pencil"
-                                            class="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-
                                     </div>
                                 </div>
                                 <div v-else>
