@@ -56,12 +56,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Verify user has access to toggle this task
-  const hasAccess =
-    task.creatorId === user.id ||
-    task.assigneeId === user.id ||
-    (task.project &&
-      (task.project.ownerId === user.id ||
-        task.project.userProjects.some((up) => up.userId === user.id)))
+  const hasAccess = task.assigneeId === user.id
 
   if (!hasAccess) {
     throw createError({

@@ -23,14 +23,24 @@ async function cleanup() {
     `Found ${protectedUserIds.length} users to protect (IDs: ${idsToExclude}).`,
   )
 
+  // Delete time entries first
   await prisma.timeEntry.deleteMany({
     where: { userId: { notIn: idsToExclude } },
   })
 
+  // Delete meeting participants for tasks that will be deleted
   await prisma.meetingParticipant.deleteMany({
-    where: { userId: { notIn: idsToExclude } },
+    where: {
+      meeting: {
+        OR: [
+          { creatorId: { notIn: idsToExclude } },
+          { assigneeId: { notIn: idsToExclude } },
+        ],
+      },
+    },
   })
 
+  // Now delete tasks
   await prisma.task.deleteMany({
     where: {
       OR: [
@@ -86,13 +96,37 @@ async function seed() {
 
   console.info(' Starting database seed...')
 
-  const adminUser = await prisma.user.create({
-    data: {
-      email: 'admin@company.com',
-      name: 'Alice Admin',
-      role: Role.ADMIN,
-    },
-  })
+  // Determine the manager - use protected user if available, otherwise create admin
+  let adminUser
+  if (protectedUserIds.length > 0) {
+    // Use the first protected user as the manager
+    adminUser = await prisma.user.findUnique({
+      where: { id: protectedUserIds[0] },
+    })
+
+    if (!adminUser) {
+      throw new Error('Protected user not found')
+    }
+
+    // Update their role to MANAGER if they aren't already
+    if (adminUser.role !== Role.MANAGER && adminUser.role !== Role.ADMIN) {
+      adminUser = await prisma.user.update({
+        where: { id: adminUser.id },
+        data: { role: Role.MANAGER },
+      })
+    }
+
+    console.info(`Using protected user ${adminUser.email} as manager`)
+  } else {
+    // Create admin user as before
+    adminUser = await prisma.user.create({
+      data: {
+        email: 'admin@company.com',
+        name: 'Alice Admin',
+        role: Role.ADMIN,
+      },
+    })
+  }
 
   const managerUser = await prisma.user.create({
     data: {
@@ -108,7 +142,7 @@ async function seed() {
       email: 'employee@company.com',
       name: 'Charlie Employee',
       role: Role.EMPLOYEE,
-      managerId: managerUser.id,
+      managerId: adminUser.id, // Report to protected user/admin
     },
   })
 
@@ -180,6 +214,43 @@ async function seed() {
       { meetingId: task2.id, userId: managerUser.id },
       { meetingId: task2.id, userId: employeeUser.id },
     ],
+  })
+
+  // Create vacation requests from employees
+  const nextWeek = new Date(today)
+  nextWeek.setDate(today.getDate() + 7)
+  
+  const twoWeeksLater = new Date(nextWeek)
+  twoWeeksLater.setDate(nextWeek.getDate() + 14)
+
+  const nextMonth = new Date(today)
+  nextMonth.setMonth(today.getMonth() + 1)
+  
+  const nextMonthEnd = new Date(nextMonth)
+  nextMonthEnd.setDate(nextMonth.getDate() + 3)
+
+  const vacation1 = await prisma.task.create({
+    data: {
+      type: TaskType.VACATION,
+      creatorId: employeeUser.id,
+      name: 'Summer Vacation',
+      description: 'Two weeks off for family vacation',
+      isDone: false,
+      startDate: nextWeek,
+      endDate: twoWeeksLater,
+    },
+  })
+
+  const vacation2 = await prisma.task.create({
+    data: {
+      type: TaskType.VACATION,
+      creatorId: managerUser.id,
+      name: 'Conference Trip',
+      description: 'Attending tech conference',
+      isDone: false,
+      startDate: nextMonth,
+      endDate: nextMonthEnd,
+    },
   })
 
   await prisma.timeEntry.createMany({
