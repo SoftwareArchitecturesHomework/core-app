@@ -1,6 +1,8 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam, readBody } from 'h3'
 
+const VALID_TYPES = ['VACATION', 'MEETING', 'TASK', 'INDIVIDUALTASK']
+
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
   const user = session?.user
@@ -30,8 +32,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const body = await readBody(event)
-  const { name, description, type, assigneeId } = body
+  const { name, description, type, assigneeId } = await readBody(event)
 
   if (!name) {
     throw createError({
@@ -47,9 +48,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Validate task type
-  const validTypes = ['VACATION', 'MEETING', 'TASK', 'INDIVIDUALTASK']
-  if (!validTypes.includes(type)) {
+  if (!VALID_TYPES.includes(type)) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid task type',

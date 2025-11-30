@@ -10,6 +10,9 @@ export default defineNuxtConfig({
     authSecret: '',
     authOrigin: '',
     authUrl: '',
+    commsAPIUrl: '',
+
+    jwtPrivateKey: '',
   },
 
   $development: {
