@@ -1,15 +1,15 @@
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  css: [
-    './app/assets/css/main.css'],
-  modules: ['@nuxt/ui', '@sidebase/nuxt-auth'],
-
-  imports: {},
-  vite: {
-    plugins: [],
+  css: ['./app/assets/css/main.css'],
+  modules: ['@nuxt/ui', '@sidebase/nuxt-auth', '@vueuse/nuxt'],
+  runtimeConfig: {
+    googleClientId: '',
+    googleClientSecret: '',
+    authSecret: '',
+    authOrigin: '',
+    authUrl: '',
   },
 
   fonts: {
@@ -25,37 +25,23 @@ export default defineNuxtConfig({
   typescript: {
     tsConfig: {
       compilerOptions: {
-        types: [
-          "node",
-          "next-auth",
-          "@sidebase/nuxt-auth"
-        ],
-        typeRoots: [
-          "./types",
-          "./node_modules/@types"
-        ]
+        types: ['node', 'next-auth', '@sidebase/nuxt-auth'],
+        typeRoots: ['./types', './node_modules/@types'],
       },
-      include: [
-        "types/**/*.d.ts"
-      ]
-    }
+      include: ['types/**/*.d.ts'],
+    },
   },
 
   auth: {
+    originEnvKey: 'NUXT_AUTH_ORIGIN',
     provider: {
       type: 'authjs',
-      trustHosts: true, // This is fine now
       defaultProvider: 'google',
       addDefaultCallbackUrl: true,
     },
-    originEnvKey: 'AUTH_ORIGIN',
-    baseURL: '/api/auth',
-
-    disableServerSideAuth: false,
-
     sessionRefresh: {
-      enablePeriodically: true,
+      enablePeriodically: 60 * 1000, // 1 minute
       enableOnWindowFocus: true,
-    }
+    },
   },
 })
