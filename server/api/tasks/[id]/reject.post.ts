@@ -1,13 +1,12 @@
 import { getServerSession } from '#auth'
-import { ExtendedUser } from '~~/types/extended-user'
 import { prisma } from '~~/server/utils/prisma'
 
 
 export default defineEventHandler(async (event) => {
     const session = await getServerSession(event)
-    const user = session?.user as ExtendedUser | undefined
-    
-    if (!user?.id || (user.role !== 'MANAGER' && user.role !== 'ADMIN')) {
+    const user = session?.user
+
+    if (!user?.id || user.role !== 'MANAGER') {
         throw createError({
             statusCode: 403,
             statusMessage: 'Only managers can reject vacation requests'
@@ -15,7 +14,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const taskId = getRouterParam(event, 'id')
-    
+
     if (!taskId || isNaN(Number(taskId))) {
         throw createError({
             statusCode: 400,
@@ -29,7 +28,7 @@ export default defineEventHandler(async (event) => {
             where: { id: Number(taskId) },
             include: {
                 creator: {
-                    select: { 
+                    select: {
                         id: true,
                         managerId: true,
                         name: true

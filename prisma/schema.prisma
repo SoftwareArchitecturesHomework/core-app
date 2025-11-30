@@ -144,7 +144,6 @@ model TimeEntry {
 enum Role {
   EMPLOYEE
   MANAGER
-  ADMIN
 }
 
 enum TaskType {

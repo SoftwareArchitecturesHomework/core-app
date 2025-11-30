@@ -4,15 +4,13 @@ export function useUser() {
   const userId = computed(() => user.value?.id)
   const userRole = computed(() => user.value?.role)
   const canCreateProject = computed(() => {
-    return userRole.value === 'MANAGER' || userRole.value === 'ADMIN'
+    return userRole.value === 'MANAGER'
   })
-  const isAdmin = computed(() => userRole.value === 'ADMIN')
 
   return {
     user,
     userId,
     userRole,
     canCreateProject,
-    isAdmin,
   }
 }

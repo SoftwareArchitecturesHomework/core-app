@@ -12,7 +12,7 @@ const links = computed<NavigationMenuItem[]>(() => {
         { label: 'Calendar', to: '/calendar', icon: 'i-heroicons-calendar' },
     ]
 
-    if (user.value?.role === 'MANAGER' || user.value?.role === 'ADMIN') {
+    if (user.value?.role === 'MANAGER') {
         items.push({ label: 'Approvals', to: '/approvals', icon: 'i-heroicons-check-circle' })
         items.push({ label: 'Reports', to: '/reports', icon: 'i-heroicons-chart-bar' })
         items.push({ label: 'Administration', to: '/administration', icon: 'i-heroicons-clipboard-document-check' })

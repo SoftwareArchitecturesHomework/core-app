@@ -59,7 +59,6 @@ async function onSubmit() {
         emit('assigneeUpdated')
     } catch (error: any) {
         console.error('Assign task error:', error)
-        console.log(projectParticipants)
         const errorMessage = error?.data?.statusMessage || 'Failed to assign task'
         toast.add({
             title: 'Error',
