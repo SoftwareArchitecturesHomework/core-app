@@ -1,25 +1,30 @@
 <script setup lang="ts">
-import { reactive, shallowRef } from 'vue'
-import { getLocalTimeZone, today } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
-import type { UserDropdownOption } from '~~/types/user-dropdown-option';
+import { reactive, shallowRef } from 'vue'
+import type { UserDropdownOption } from '~~/types/user-dropdown-option'
 
 const props = defineProps<{
-    projectId: number
+  projectId: number
+  participants: Array<{
+    userId: number
+    user: { id: number; name: string | null }
+  }>
 }>()
 
 const emit = defineEmits<{
-    taskAdded: []
+  taskAdded: []
 }>()
 
 const newTask = reactive({
-    name: '',
-    description: '',
-    assigneeId: null as number | null
+  name: '',
+  description: '',
+  assigneeId: null as number | null,
 })
 const { data: projectParticipants } = await useFetch('/api/users', {
-    query: computed(() => props.projectId ? { projectId: props.projectId } : {}),
-    immediate: !!props.projectId
+  query: computed(() =>
+    props.projectId ? { projectId: props.projectId } : {},
+  ),
+  immediate: !!props.projectId,
 })
 
 const dueDate = shallowRef<DateValue | null>(null)
@@ -30,111 +35,129 @@ const toast = useToast()
 const selectedAssignee = ref<UserDropdownOption | undefined>(undefined)
 
 function resetForm() {
-    newTask.name = ''
-    newTask.description = ''
-    newTask.assigneeId = null
-    dueDate.value = null
+  newTask.name = ''
+  newTask.description = ''
+  newTask.assigneeId = null
+  dueDate.value = null
 }
 
 function onCancel() {
-    resetForm()
-    isOpen.value = false
+  resetForm()
+  isOpen.value = false
 }
 
 async function onSubmit() {
-    if (!newTask.name) {
-        toast.add({
-            title: 'Validation Error',
-            description: 'Task name is required',
-            color: 'error'
-        })
-        return
-    }
+  if (!newTask.name) {
+    toast.add({
+      title: 'Validation Error',
+      description: 'Task name is required',
+      color: 'error',
+    })
+    return
+  }
 
-    isSubmitting.value = true
+  isSubmitting.value = true
 
-    try {
-        await $fetch(`/api/projects/${props.projectId}/tasks`, {
-            method: 'POST',
-            body: {
-                name: newTask.name,
-                description: newTask.description || null,
-                type: "TASK",
-                assigneeId: newTask.assigneeId
-            }
-        })
+  try {
+    await $fetch(`/api/projects/${props.projectId}/tasks`, {
+      method: 'POST',
+      body: {
+        name: newTask.name,
+        description: newTask.description || null,
+        type: 'TASK',
+        assigneeId: newTask.assigneeId,
+      },
+    })
 
-        toast.add({
-            title: 'Success',
-            description: 'Task created successfully',
-            color: 'primary'
-        })
+    toast.add({
+      title: 'Success',
+      description: 'Task created successfully',
+      color: 'primary',
+    })
 
-        resetForm()
-        emit('taskAdded')
-        isOpen.value = false
-    } catch (error: any) {
-        console.error('Task creation error:', error)
-        const errorMessage = error?.data?.statusMessage || 'Failed to create task'
-        toast.add({
-            title: 'Error',
-            description: errorMessage,
-            color: 'error'
-        })
-    } finally {
-        isSubmitting.value = false
-    }
+    resetForm()
+    emit('taskAdded')
+    isOpen.value = false
+  } catch (error: any) {
+    console.error('Task creation error:', error)
+    const errorMessage = error?.data?.statusMessage || 'Failed to create task'
+    toast.add({
+      title: 'Error',
+      description: errorMessage,
+      color: 'error',
+    })
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
 <template>
-    <UModal v-model:open="isOpen">
-        <UButton icon="i-heroicons-plus" size="sm" color="primary" variant="soft">
-            Add Task
-        </UButton>
+  <UModal v-model:open="isOpen">
+    <UButton icon="i-heroicons-plus" size="sm" color="primary" variant="soft">
+      Add Task
+    </UButton>
 
-        <template #title>
-            <h2 class="text-lg font-semibold">New Task</h2>
-        </template>
+    <template #title>
+      <h2 class="text-lg font-semibold">New Task</h2>
+    </template>
 
-        <template #body>
-            <div class="flex flex-col gap-4">
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium">Task Name *</label>
-                    <UInput v-model="newTask.name" placeholder="Enter task name" class="w-full" />
-                </div>
+    <template #body>
+      <div class="flex flex-col gap-4">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium">Task Name *</label>
+          <UInput
+            v-model="newTask.name"
+            placeholder="Enter task name"
+            class="w-full"
+          />
+        </div>
 
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium w-full">Description</label>
-                    <UTextarea v-model="newTask.description" placeholder="Enter task description" class="w-full" />
-                </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium w-full">Description</label>
+          <UTextarea
+            v-model="newTask.description"
+            placeholder="Enter task description"
+            class="w-full"
+          />
+        </div>
 
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium">Assignee</label>
-                    <UserSearchDropdown v-model="selectedAssignee" :userOptions="projectParticipants || []" />
-                </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium">Assignee</label>
+          <UserSearchDropdown
+            v-model="selectedAssignee"
+            :userOptions="projectParticipants || []"
+          />
+        </div>
 
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium">Due Date</label>
-                    <UPopover>
-                        <UButton variant="outline" class="w-full justify-start">
-                            {{ dueDate ? dueDate.toString() : 'Not set' }}
-                        </UButton>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium">Due Date</label>
+          <UPopover>
+            <UButton variant="outline" class="w-full justify-start">
+              {{ dueDate ? dueDate.toString() : 'Not set' }}
+            </UButton>
 
-                        <template #content>
-                            <UCalendar v-model="dueDate" class="w-auto" />
-                        </template>
-                    </UPopover>
-                </div>
+            <template #content>
+              <UCalendar v-model="dueDate" class="w-auto" />
+            </template>
+          </UPopover>
+        </div>
 
-                <div class="flex justify-end gap-2 pt-4">
-                    <UButton type="button" variant="ghost" @click="onCancel">Cancel</UButton>
-                    <UButton type="button" color="primary" @click="onSubmit" :loading="isSubmitting"
-                        :disabled="isSubmitting">
-                        Create
-                    </UButton>
-                </div>
-            </div>
-        </template>
-    </UModal>
+        <div class="flex justify-end gap-2 pt-4">
+          <UButton type="button" variant="ghost" @click="onCancel"
+            >Cancel</UButton
+          >
+          <UButton
+            type="button"
+            color="primary"
+            @click="onSubmit"
+            :loading="isSubmitting"
+            :disabled="isSubmitting"
+          >
+            Create
+          </UButton>
+        </div>
+      </div>
+    </template>
+  </UModal>
 </template>

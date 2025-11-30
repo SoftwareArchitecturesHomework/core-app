@@ -1,56 +1,52 @@
 import { NuxtAuthHandler } from '#auth'
-import GoogleProviderImport from 'next-auth/providers/google'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
-import prisma from '../../../lib/prisma'
+import _GoogleProvider from 'next-auth/providers/google'
+import '~~/types/next-auth.d'
 
-const GoogleProvider =
-    (GoogleProviderImport as any).default ?? GoogleProviderImport
+const GoogleProvider = (_GoogleProvider as any)
+  .default as typeof _GoogleProvider
 
+const config = useRuntimeConfig()
 export default NuxtAuthHandler({
-    secret: process.env.AUTH_SECRET,
-
-    adapter: PrismaAdapter(prisma),
-
-    providers: [
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            authorization: {
-                params: {
-                    prompt: 'select_account',
-                },
-            },
-        }),
-    ],
-
-    session: { strategy: 'database' },
-
-    callbacks: {
-        async redirect({ url, baseUrl }) {
-            const safeBase =
-                baseUrl ||
-                process.env.NEXTAUTH_URL ||
-                process.env.AUTH_ORIGIN ||
-                'http://localhost:3000'
-
-            if (url.startsWith('/')) return safeBase + url
-
-            try {
-                if (new URL(url).origin === safeBase) return url
-            } catch {
-            }
-            return safeBase
+  // @ts-expect-error new prisma version
+  // the adapter types are not yet updated
+  // but the actual prisma api didn't change
+  adapter: PrismaAdapter(prisma),
+  session: { strategy: 'database' },
+  secret: config.authSecret,
+  providers: [
+    GoogleProvider({
+      clientId: config.googleClientId,
+      clientSecret: config.googleClientSecret,
+      authorization: {
+        params: {
+          prompt: 'select_account',
         },
+      },
+    }),
+  ],
 
-        async session({ session, user }) {
-            if (session.user) {
-                // @ts-expect-error custom
-                session.user.id = user.id
-                // @ts-expect-error custom
-                session.user.role = user.role
-            }
-            return session
-        },
+  callbacks: {
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) {
+        return baseUrl + url
+      }
+
+      try {
+        if (new URL(url).origin === baseUrl) {
+          return url
+        }
+      } catch {}
+
+      return baseUrl
     },
 
+    async session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id as unknown as number
+        session.user.role = user.role
+      }
+      return session
+    },
+  },
 })
