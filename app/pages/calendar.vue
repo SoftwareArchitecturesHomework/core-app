@@ -1,3 +1,1 @@
-<template>
-    LOL
-</template>
+<template>LOL</template>
