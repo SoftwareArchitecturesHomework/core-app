@@ -60,13 +60,13 @@ function formatDate(date: string) {
                 </div>
             </div>
 
-            <template #footer>
+            <!-- <template #footer>
                 <div
                     class="flex items-center gap-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                     <span>View details</span>
                     <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
                 </div>
-            </template>
+            </template> -->
         </UCard>
     </NuxtLink>
 </template>
