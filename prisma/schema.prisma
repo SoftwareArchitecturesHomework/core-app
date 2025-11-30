@@ -103,6 +103,8 @@ model Task {
   creatorId           Int
   creator             User                 @relation("TaskCreator", fields: [creatorId], references: [id])
   name                String?
+  startDate           DateTime?
+  endDate             DateTime?
   description         String?
   isDone              Boolean              @default(false)
   project             Project?             @relation("ProjectTasks", fields: [projectId], references: [id])
