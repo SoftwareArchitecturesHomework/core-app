@@ -70,9 +70,8 @@ export default defineEventHandler(async (event) => {
     // Verify user has permission (must be creator or project owner)
     const userId = Number(user.id)
     const isCreator = task.creatorId === userId
-    const isProjectOwner = task.project.ownerId === userId
 
-    if (!isCreator && !isProjectOwner) {
+    if (!isCreator) {
       throw createError({
         statusCode: 403,
         statusMessage:

@@ -12,7 +12,7 @@ const links = computed<NavigationMenuItem[]>(() => {
         { label: 'Calendar', to: '/calendar', icon: 'i-heroicons-calendar' },
     ]
 
-    if (user.value?.role === 'MANAGER' || user.value?.role === 'ADMIN') {
+    if (user.value?.role === 'MANAGER') {
         items.push({ label: 'Approvals', to: '/approvals', icon: 'i-heroicons-check-circle' })
         items.push({ label: 'Reports', to: '/reports', icon: 'i-heroicons-chart-bar' })
         items.push({ label: 'Administration', to: '/administration', icon: 'i-heroicons-clipboard-document-check' })
@@ -22,18 +22,6 @@ const links = computed<NavigationMenuItem[]>(() => {
 })
 
 const userMenuItems = [
-    [
-        {
-            label: 'Switch Account',
-            icon: 'i-heroicons-arrow-path-rounded-square',
-            onSelect: () => {
-                signOut({ redirect: false })
-                signIn('google', {
-                    callbackUrl: route.fullPath !== '/' ? route.fullPath : '/projects',
-                })
-            },
-        },
-    ],
     [
         {
             label: 'Logout',
@@ -69,7 +57,7 @@ const userMenuItems = [
                 </div>
 
                 <UDropdownMenu :items="userMenuItems" :popper="{ placement: 'bottom-end' }">
-                    <UAvatar v-if="user?.image" :src="user.image" :alt="user.name || 'User avatar'" size="lg"
+                    <UAvatar :src="user?.image || undefined" :alt="user?.name || 'User avatar'" size="lg"
                         class="cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all" />
                 </UDropdownMenu>
             </div>
