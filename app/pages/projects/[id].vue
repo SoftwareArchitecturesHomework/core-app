@@ -252,12 +252,7 @@ function closeProject() {
             <div
               class="font-semibold text-gray-900 dark:text-white flex items-center gap-2"
               >{{ project.owner.name }}
-              <UBadge
-                v-if="user && project.owner.id === user.id"
-                color="primary"
-                variant="soft"
-                size="sm"
-                class="ml-auto"
+              <UBadge color="primary" variant="soft" size="sm" class="ml-auto"
                 >You</UBadge
               >
             </div>
@@ -367,22 +362,27 @@ function closeProject() {
             :key="task.id"
             class="py-4 first:pt-0 last:pb-0"
           >
-            <div class="flex items-start gap-3">
-              <UBadge :color="getTaskTypeColor(task.type)" variant="soft">
-                {{ getTaskTypeLabel(task.type) }}
-              </UBadge>
-              <div class="flex-1">
-                <p class="font-semibold text-gray-900 dark:text-white">{{
-                  task.name || 'Untitled Task'
-                }}</p>
-                <p
-                  v-if="task.description"
-                  class="text-sm text-gray-600 dark:text-gray-400 mt-1"
-                >
-                  {{ task.description }}
-                </p>
+            <NuxtLink
+              :to="`/tasks/${task.id}`"
+              class="block hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-md"
+            >
+              <div class="flex items-start gap-3">
+                <UBadge :color="getTaskTypeColor(task.type)" variant="soft">
+                  {{ getTaskTypeLabel(task.type) }}
+                </UBadge>
+                <div class="flex-1">
+                  <p class="font-semibold text-gray-900 dark:text-white">
+                    {{ task.name || 'UntitledTask' }}
+                  </p>
+                  <p
+                    v-if="task.description"
+                    class="text-sm text-gray-600 dark:text-gray-400 mt-1"
+                  >
+                    {{ task.description }}
+                  </p>
+                </div>
               </div>
-            </div>
+            </NuxtLink>
           </div>
         </div>
         <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">

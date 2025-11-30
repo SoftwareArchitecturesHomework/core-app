@@ -1,16 +1,13 @@
 import { defineNitroPlugin } from 'nitropack/runtime'
-import { cleanup, seed } from '../../prisma/seed'
+import { cleanup, seed } from '~~/prisma/seed'
 
 export default defineNitroPlugin(async (nitroApp) => {
-  if (process.env.NODE_ENV !== 'development') {
-    return
-  }
-
   console.info('[Nuxt Server Startup] Running Development Data Seeding...')
 
   try {
     await cleanup()
     await seed()
+    console.info('Database seeding completed.')
   } catch (error) {
     console.error('FATAL: Database seeding failed on startup.', error)
   }

@@ -12,6 +12,12 @@ export default defineNuxtConfig({
     authUrl: '',
   },
 
+  $development: {
+    nitro: {
+      plugins: ['~~/server/dev-plugins/db-seed'],
+    },
+  },
+
   fonts: {
     google: false,
     googleicons: false,

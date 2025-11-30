@@ -1,5 +1,4 @@
 import { getServerSession } from '#auth'
-import { prisma } from '~~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)

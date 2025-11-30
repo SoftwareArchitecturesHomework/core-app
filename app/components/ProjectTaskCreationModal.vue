@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DateValue } from '@internationalized/date'
 import { reactive, shallowRef } from 'vue'
+import type { UserDropdownOption } from '~~/types/user-dropdown-option'
 
 const props = defineProps<{
   projectId: number
@@ -19,26 +20,19 @@ const newTask = reactive({
   description: '',
   assigneeId: null as number | null,
 })
+const { data: projectParticipants } = await useFetch('/api/users', {
+  query: computed(() =>
+    props.projectId ? { projectId: props.projectId } : {},
+  ),
+  immediate: !!props.projectId,
+})
 
 const dueDate = shallowRef<DateValue | null>(null)
 const isSubmitting = ref(false)
 const isOpen = ref(false)
 const toast = useToast()
 
-const assigneeOptions = computed(() => {
-  return props.participants.map((p) => ({
-    label: p.user.name || 'Unknown User',
-    value: p.userId,
-  }))
-})
-
-const selectedAssignee = computed({
-  get: () =>
-    assigneeOptions.value.find((option) => option.value === newTask.assigneeId),
-  set: (option) => {
-    newTask.assigneeId = option?.value ?? null
-  },
-})
+const selectedAssignee = ref<UserDropdownOption | undefined>(undefined)
 
 function resetForm() {
   newTask.name = ''
@@ -130,13 +124,9 @@ async function onSubmit() {
 
         <div class="space-y-2">
           <label class="block text-sm font-medium">Assignee</label>
-          <USelectMenu
+          <UserSearchDropdown
             v-model="selectedAssignee"
-            :items="assigneeOptions"
-            placeholder="Select assignee (optional)"
-            value-attribute="value"
-            option-attribute="label"
-            class="w-full"
+            :userOptions="projectParticipants || []"
           />
         </div>
 

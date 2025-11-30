@@ -1,5 +1,4 @@
 import { getServerSession } from '#auth'
-import { prisma } from '~~/server/utils/prisma'
 import { ProjectCreationDto } from '~~/types/project-creation-dto'
 
 export default defineEventHandler(async (event) => {

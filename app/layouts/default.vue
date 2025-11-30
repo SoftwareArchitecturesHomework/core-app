@@ -4,6 +4,7 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 const route = useRoute()
 const { status, signOut, signIn } = useAuth()
 const { user } = useUser()
+const colorMode = useColorMode()
 
 const links = computed<NavigationMenuItem[]>(() => [
   { label: 'Projects', to: '/projects', leadingIcon: 'project' },
@@ -35,13 +36,29 @@ const userMenuItems = [
 
 <template>
   <ClientOnly>
-    <UHeader :toggle="false">
-      <template #title>
-        <NuxtLink to="/" class="text-xl font-bold"> WorkPlanner </NuxtLink>
+    <UHeader to="/" mode="slideover">
+      <template #title class="flex items-center">
+        <div class="flex items-center gap-2">
+          <img
+            :src="
+              colorMode.value === 'light'
+                ? '/favicon-light.png'
+                : '/favicon-dark.png'
+            "
+            alt="WorkPlanner Logo"
+            class="h-11"
+          />
+          <h1 class="text-xl font-bold">WorkPlanner</h1>
+        </div>
       </template>
 
-      <template #default>
-        <UNavigationMenu :items="links" class="w-60 space-x-6" />
+      <UNavigationMenu :items="links" />
+      <template #body>
+        <UNavigationMenu
+          :items="links"
+          orientation="vertical"
+          class="-mx-2.5"
+        />
       </template>
 
       <template #right>
@@ -68,6 +85,7 @@ const userMenuItems = [
             </UDropdownMenu>
           </div>
         </ClientOnly>
+        <UColorModeButton />
       </template>
     </UHeader>
   </ClientOnly>

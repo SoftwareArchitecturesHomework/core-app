@@ -1,7 +1,6 @@
 import { NuxtAuthHandler } from '#auth'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import _GoogleProvider from 'next-auth/providers/google'
-import { prisma } from '~~/server/utils/prisma'
 import '~~/types/next-auth.d'
 
 const GoogleProvider = (_GoogleProvider as any)

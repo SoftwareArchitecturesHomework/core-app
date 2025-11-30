@@ -1,5 +1,5 @@
-import { Role, TaskType } from '../.generated/prisma/client'
-import { prisma } from '../server/utils/prisma'
+import { Role, TaskType } from '~~/.generated/prisma/client'
+import { prisma } from '~~/server/utils/prisma'
 
 let protectedUserIds: string[] | any[]
 
@@ -20,10 +20,14 @@ async function cleanup() {
   const idsToExclude = protectedUserIds.length > 0 ? protectedUserIds : [0]
 
   console.info(
-    `Found ${protectedUserIds.length} users to protect (IDs: ${idsToExclude}).`
+    `Found ${protectedUserIds.length} users to protect (IDs: ${idsToExclude}).`,
   )
 
   await prisma.timeEntry.deleteMany({
+    where: { userId: { notIn: idsToExclude } },
+  })
+
+  await prisma.meetingParticipant.deleteMany({
     where: { userId: { notIn: idsToExclude } },
   })
 
@@ -71,7 +75,7 @@ async function cleanup() {
   })
 
   console.info(
-    `Deleted ${deletedUsers.count} mock users and their associated data.`
+    `Deleted ${deletedUsers.count} mock users and their associated data.`,
   )
 }
 
@@ -131,12 +135,12 @@ async function seed() {
       endDate: new Date(
         today.getFullYear(),
         today.getMonth(),
-        today.getDate() + 45
+        today.getDate() + 45,
       ),
       plannedEndDate: new Date(
         today.getFullYear(),
         today.getMonth(),
-        today.getDate() + 60
+        today.getDate() + 60,
       ),
       ownerId: managerUser.id,
       userProjects: {
@@ -168,6 +172,14 @@ async function seed() {
       isDone: false,
       projectId: projectA.id,
     },
+  })
+
+  await prisma.meetingParticipant.createMany({
+    data: [
+      { meetingId: task2.id, userId: adminUser.id },
+      { meetingId: task2.id, userId: managerUser.id },
+      { meetingId: task2.id, userId: employeeUser.id },
+    ],
   })
 
   await prisma.timeEntry.createMany({
@@ -208,7 +220,7 @@ async function seed() {
         skipDuplicates: true, // Important: Prevents errors if a link somehow already exists
       })
       console.info(
-        `Auto-linked ${protectedUserIds.length} Google user(s) to ${mockProjectIds.length} projects.`
+        `Auto-linked ${protectedUserIds.length} Google user(s) to ${mockProjectIds.length} projects.`,
       )
     }
   }
