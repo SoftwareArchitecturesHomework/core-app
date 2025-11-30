@@ -14,6 +14,25 @@ export default defineNuxtConfig({
 
     jwtPrivateKey: '',
   },
+  app: {
+    head: {
+      title: 'WorkPlanner',
+      link: [
+        {
+          rel: 'icon',
+          type: 'image/png',
+          href: '/favicon-light.png',
+          media: '(prefers-color-scheme: light)',
+        },
+        {
+          rel: 'icon',
+          type: 'image/png',
+          href: '/favicon-dark.png',
+          media: '(prefers-color-scheme: dark)',
+        },
+      ],
+    },
+  },
 
   $development: {
     nitro: {
