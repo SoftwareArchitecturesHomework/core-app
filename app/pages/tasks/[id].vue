@@ -228,7 +228,7 @@ function openAssigneeModal() {
               :to="`/projects/${task.project.id}`"
               class="flex items-center gap-2 text-primary hover:underline"
             >
-              <UIcon name="i-heroicons-folder" class="w-5 h-5 flex-shrink-0" />
+              <UIcon name="i-heroicons-folder" class="w-5 h-5 shrink-0" />
               <span class="truncate">{{ task.project.name }}</span>
             </NuxtLink>
           </UCard>
@@ -330,7 +330,7 @@ function openAssigneeModal() {
                   </div>
                   <UIcon
                     name="i-heroicons-pencil"
-                    class="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                    class="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                   />
                 </div>
                 <div v-else class="mt-2 flex justify-center">
