@@ -1,5 +1,6 @@
 import { Role, TaskType } from '~~/.generated/prisma/client'
 import { prisma } from '~~/server/utils/prisma'
+import bcrypt from 'bcrypt'
 
 let protectedUserIds: string[] | any[]
 
@@ -66,6 +67,8 @@ async function seed() {
   const today = new Date()
   const futureDate = new Date()
   futureDate.setMonth(today.getMonth() + 3)
+  const hashedPassword = await bcrypt.hash('defaultPassword123', 10)
+
 
   console.info('Starting database seed...')
 
@@ -97,6 +100,7 @@ async function seed() {
         email: 'admin@company.com',
         name: 'Alice Admin',
         role: Role.MANAGER,
+        password: hashedPassword
       },
     })
   }
@@ -107,6 +111,7 @@ async function seed() {
       name: 'Bob Manager',
       role: Role.MANAGER,
       managerId: mainUser.id,
+      password: hashedPassword
     },
   })
 
@@ -116,6 +121,7 @@ async function seed() {
       name: 'Charlie Employee',
       role: Role.EMPLOYEE,
       managerId: mainUser.id,
+      password: hashedPassword
     },
   })
 
@@ -125,6 +131,7 @@ async function seed() {
       name: 'Diana Developer',
       role: Role.EMPLOYEE,
       managerId: mainUser.id,
+      password: hashedPassword
     },
   })
 
@@ -134,6 +141,7 @@ async function seed() {
       name: 'Ethan Engineer',
       role: Role.EMPLOYEE,
       managerId: mainUser.id,
+      password: hashedPassword
     },
   })
 
@@ -143,6 +151,7 @@ async function seed() {
       name: 'Fiona Frontend',
       role: Role.EMPLOYEE,
       managerId: managerUser.id, // Reports to Bob
+      password: hashedPassword
     },
   })
 
