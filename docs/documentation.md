@@ -470,35 +470,28 @@ Az értesítési mikroszerviz Elixir nyelven készült, Phoenix framework-öt ha
 
 ### Reporting Service (Python)
 
-A riportgeneráló mikroszerviz Python nyelven készült, adatelemzésre és statisztikák előállítására optimalizálva.
-
-**Technológiai választás indoklása**:
-
-- **Adatelemzés**: Gazdag ökoszisztéma (pandas, numpy) komplex statisztikai számításokhoz
-- **Riportgenerálás**: Matplotlib, Seaborn visualizációs könyvtárak
-- **Egyszerűség**: Gyors prototípus készítés és iteráció
+A riportgeneráló szolgáltatás Python nyelven készült, adatelemzésre és statisztikák előállítására optimalizálva.
+A feladata, hogy a Postgre adatbázisunkon elhelyezett aggregált view-k alapján jelentést készítsen az adott menedzserek projektjeiről.  
+HTML-ben és PDF-ben generálja ki a jelentéseket, ezeket gRPC és REST végpontokon keresztül lehet lekérdezni.
+A jelentések tartalmaznak szöveges adatokat, diagramokat, illetve táblázatokat.
 
 **Felelősségek**:
 
-- Munkaidő statisztikák generálása (havi, negyedéves, éves bontásban)
 - Projekt előrehaladás riportok
 - Dolgozói teljesítmény összesítők
-- Exportálás különböző formátumokba (PDF, Excel, CSV)
-- Adatvisualizáció (grafikonok, diagramok)
+- Exportálás különböző formátumokba
+- Adatvizualizáció (grafikonok, diagramok)
 
 **REST API végpontok**:
 
-- `POST /api/reports/time-summary` - Munkaidő összesítő generálás
-- `POST /api/reports/project-progress` - Projekt előrehaladás riport
-- `GET /api/reports/:id/download` - Riport letöltés
+- `GET reports/manager/{manager_id}/pdf` - Adott id-val rendelkező menedzser riportjának a generálása pdf-ben.
+- `GET reports/manager/{manager_id}/html` - Adott id-val rendelkező menedzser riportjának a generálása html-ben.
 
-**Megjegyzés**: A részletes implementációt a Reporting Service fejlesztői dokumentálják.
 
-### Mikroszerviz kommunikáció
 
-A Core Application REST API hívásokkal kommunikál a mikroszervizekkel:
+### Mikroszolgáltatás kommunikáció
 
-**Hibakezelés**: Ha egy mikroszerviz nem érhető el, a Core Application továbbra is működik, de a felhasználó figyelmeztetést kap (pl. "Értesítés küldése sikertelen, később újrapróbálkozunk").
+A Core Application REST API hívásokkal kommunikál a microservice-kkel, de gRPC interface is elérhető.
 
 # Telepítési leírás
 
