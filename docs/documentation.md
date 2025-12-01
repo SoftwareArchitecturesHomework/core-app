@@ -1,6 +1,10 @@
 # Rendszerterv
 
+<center>
+
 ![logo](../public/logo-light.png)
+
+</center>
 
 ### Munkahelyi nyilvántartási rendszer
 
