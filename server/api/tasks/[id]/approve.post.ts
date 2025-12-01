@@ -1,6 +1,6 @@
 import { getServerSession } from '#auth'
+import { approveVacationRequest, getTaskWithCreatorById } from '~~/server/repositories/TaskRepository'
 
-import { prisma } from '~~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
     const session = await getServerSession(event)
@@ -24,18 +24,7 @@ export default defineEventHandler(async (event) => {
 
     try {
         // Fetch the task with creator info
-        const task = await prisma.task.findUnique({
-            where: { id: Number(taskId) },
-            include: {
-                creator: {
-                    select: {
-                        id: true,
-                        managerId: true,
-                        name: true
-                    }
-                }
-            }
-        })
+        const task = await getTaskWithCreatorById(Number(taskId))
 
         if (!task) {
             throw createError({
@@ -67,22 +56,7 @@ export default defineEventHandler(async (event) => {
         }
 
         // Approve the vacation
-        const updatedTask = await prisma.task.update({
-            where: { id: Number(taskId) },
-            data: { isApproved: true },
-            include: {
-                creator: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        image: true
-                    }
-                }
-            }
-        })
-
-        return updatedTask
+        return await approveVacationRequest(Number(taskId))
     } catch (error: any) {
         if (error.statusCode) {
             throw error

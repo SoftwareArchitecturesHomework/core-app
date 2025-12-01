@@ -1,4 +1,5 @@
 import { getServerSession } from '#auth'
+import { getUsersForTimeAdministration } from '~~/server/repositories/userRepository'
 import { getWorkingDaysInMonth, getWorkingDaysInRange } from '~~/server/utils/date-utils'
 
 type TimeAdministrationResponse = {
@@ -52,49 +53,7 @@ export default defineEventHandler(async (event): Promise<TimeAdministrationRespo
         const totalWorkingDays = getWorkingDaysInMonth(year, month)
 
         // Get employees (for managers, get their direct reports)
-        const employees = await prisma.user.findMany({
-            where: { managerId: user.id }, // Managers see their reports
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-                timeEntries: {
-                    where: {
-                        date: {
-                            gte: startDate,
-                            lte: endDate,
-                        },
-                    },
-                    select: {
-                        hours: true,
-                    },
-                },
-                tasks: {
-                    where: {
-                        type: 'VACATION',
-                        isApproved: true,
-                        AND: [
-                            {
-                                startDate: {
-                                    lte: endDate,
-                                },
-                            },
-                            {
-                                endDate: {
-                                    gte: startDate,
-                                },
-                            },
-                        ],
-                    },
-                    select: {
-                        startDate: true,
-                        endDate: true,
-                    },
-                },
-            },
-        })
-
+        const employees = await getUsersForTimeAdministration(user.id, startDate, endDate)
         const employeeData = employees.map(employee => {
             // Calculate administered hours
             const administeredHours = employee.timeEntries.reduce(

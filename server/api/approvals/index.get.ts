@@ -1,6 +1,6 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler } from 'h3'
-import { prisma } from '~~/server/utils/prisma'
+import { getPendingVacationRequestsForManager } from '~~/server/repositories/TaskRepository'
 
 export default defineEventHandler(async (event) => {
     const session = await getServerSession(event)
@@ -13,28 +13,5 @@ export default defineEventHandler(async (event) => {
         })
     }
 
-    const vacations = await prisma.task.findMany({
-        where: {
-            type: 'VACATION',
-            isApproved: null,
-            creator: {
-                managerId: user.id,
-            },
-        },
-        include: {
-            creator: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true,
-                    role: true,
-                },
-            },
-        },
-        orderBy: {
-            startDate: 'asc',
-        },
-    })
-    return vacations
+    return await getPendingVacationRequestsForManager(user.id)
 })

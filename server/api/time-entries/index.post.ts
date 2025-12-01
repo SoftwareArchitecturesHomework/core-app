@@ -1,4 +1,8 @@
 import { getServerSession } from '#auth'
+import { create } from 'domain'
+import { get } from 'http'
+import { getTaskWithProjectById } from '~~/server/repositories/TaskRepository'
+import { createTimeEntry } from '~~/server/repositories/TimeEntryRepository'
 
 export default defineEventHandler(async (event) => {
   // Authenticate user
@@ -32,19 +36,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Verify task exists and user has access to it
-    const task = await prisma.task.findUnique({
-      where: { id: Number(taskId) },
-      include: {
-        project: {
-          select: {
-            ownerId: true,
-            userProjects: {
-              select: { userId: true },
-            },
-          },
-        },
-      },
-    })
+    const task = await getTaskWithProjectById(Number(taskId))
 
     if (!task) {
       throw createError({
@@ -66,34 +58,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Create time entry
-    const timeEntry = await prisma.timeEntry.create({
-      data: {
-        taskId: Number(taskId),
-        userId: userId,
-        date: new Date(date),
-        hours: hours,
-        note: note || null,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-          },
-        },
-        task: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-          },
-        },
-      },
-    })
-
-    return timeEntry
+    return await createTimeEntry(Number(taskId), userId, new Date(date), hours, note || null)
   } catch (error: any) {
     if (error.statusCode) {
       throw error

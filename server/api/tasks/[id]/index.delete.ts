@@ -1,5 +1,5 @@
-import { prisma } from '~~/server/utils/prisma'
 import { getServerSession } from '#auth'
+import { deleteTaskById, getTaskById } from '~~/server/repositories/TaskRepository'
 
 export default defineEventHandler(async (event) => {
     // Authenticate user
@@ -22,15 +22,7 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        // Fetch the task to verify it exists and check ownership
-        const task = await prisma.task.findUnique({
-            where: { id: Number(taskId) },
-            select: {
-                id: true,
-                creatorId: true,
-                name: true,
-            },
-        })
+        const task = await getTaskById(Number(taskId))
 
         if (!task) {
             throw createError({
@@ -48,9 +40,7 @@ export default defineEventHandler(async (event) => {
         }
 
         // Delete the task (this will cascade delete time entries and meeting participants)
-        await prisma.task.delete({
-            where: { id: Number(taskId) },
-        })
+        await deleteTaskById(Number(taskId))
 
         return {
             success: true,

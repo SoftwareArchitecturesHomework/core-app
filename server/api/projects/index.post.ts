@@ -1,8 +1,8 @@
 import { getServerSession } from '#auth'
+import { createProject } from '~~/server/repositories/projectRepository'
 import { ProjectCreationDto } from '~~/types/project-creation-dto'
 
 export default defineEventHandler(async (event) => {
-    // Use event.context.auth instead of getServerSession
     const session = await getServerSession(event)
     const user = session?.user
 
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
         })
     }
 
-    const body = (await readBody(event)) as ProjectCreationDto
+    const body = (await readBody(event))
 
     const { projectName, startDate, plannedEndDate } = body
 
@@ -43,31 +43,7 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        const project = await prisma.project.create({
-            data: {
-                name: projectName,
-                startDate: new Date(startDate),
-                plannedEndDate: plannedEndDate ? new Date(plannedEndDate) : null,
-                ownerId: user.id,
-                userProjects: {
-                    create: {
-                        userId: user.id,
-                    },
-                },
-            },
-            include: {
-                owner: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        image: true,
-                    },
-                },
-            },
-        })
-
-        return project
+        return await createProject(user.id, projectName, new Date(startDate), plannedEndDate ? new Date(plannedEndDate) : undefined)
     } catch (error) {
         console.error('Error creating project:', error)
         throw createError({

@@ -1,5 +1,7 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam, readBody } from 'h3'
+import { getProjectById } from '~~/server/repositories/projectRepository'
+import { isUserInProject, removeUserFromProject } from '~~/server/repositories/userProjectRepository'
 
 export default defineEventHandler(async (event) => {
     const session = await getServerSession(event)
@@ -42,9 +44,7 @@ export default defineEventHandler(async (event) => {
 
     try {
         // Check if the project exists and if the current user is the owner
-        const project = await prisma.project.findUnique({
-            where: { id },
-        })
+        const project = await getProjectById(id)
 
         if (!project) {
             throw createError({
@@ -69,31 +69,16 @@ export default defineEventHandler(async (event) => {
         }
 
         // Check if user is actually a participant
-        const existingParticipant = await prisma.userProject.findUnique({
-            where: {
-                projectId_userId: {
-                    projectId: id,
-                    userId: userId,
-                },
-            },
-        })
+        const isInProject = await isUserInProject(id, userId)
 
-        if (!existingParticipant) {
+        if (!isInProject) {
             throw createError({
                 statusCode: 404,
                 statusMessage: 'User is not a participant in this project',
             })
         }
 
-        // Remove the participant
-        await prisma.userProject.delete({
-            where: {
-                projectId_userId: {
-                    projectId: id,
-                    userId: userId,
-                },
-            },
-        })
+        await removeUserFromProject(id, userId)
 
         return {
             success: true,
@@ -111,3 +96,4 @@ export default defineEventHandler(async (event) => {
         })
     }
 })
+

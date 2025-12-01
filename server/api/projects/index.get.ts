@@ -1,47 +1,26 @@
 import { defineEventHandler, getQuery } from 'h3'
+import { getServerSession } from '#auth'
+import { getProjectByOwnerId, getProjectByParticipantId } from '~~/server/repositories/projectRepository'
 
 export default defineEventHandler(async (event) => {
-  const { ownerId, participantId } = getQuery(event)
+    const { ownerId, participantId } = getQuery(event)
+    const session = await getServerSession(event)
+    const user = session?.user
 
-  // If both ownerId and participantId are provided, fetch projects that match either condition
-  if (ownerId && participantId) {
-    return prisma.project.findMany({
-      where: {
-        OR: [
-          {
-            ownerId: Number.parseInt(ownerId as string),
-          },
-          {
-            userProjects: {
-              some: {
-                userId: Number.parseInt(participantId as string),
-              },
-            },
-          },
-        ],
-      },
-    })
-  }
+    if (!session?.user || !user?.id) {
+        throw createError({
+            statusCode: 401,
+            statusMessage: 'Unauthorized',
+        })
+    }
 
-  if (ownerId) {
-    return prisma.project.findMany({
-      where: {
-        ownerId: Number.parseInt(ownerId as string),
-      },
-    })
-  }
+    if (ownerId) {
+        return getProjectByOwnerId(Number.parseInt(ownerId as string))
+    }
 
-  if (participantId) {
-    return prisma.project.findMany({
-      where: {
-        userProjects: {
-          some: {
-            userId: Number.parseInt(participantId as string),
-          },
-        },
-      },
-    })
-  }
+    if (participantId) {
+        return getProjectByParticipantId(Number.parseInt(participantId as string))
+    }
 
-  return prisma.project.findMany()
+    return prisma.project.findMany()
 })

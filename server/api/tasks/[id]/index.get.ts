@@ -1,9 +1,10 @@
 import { getServerSession } from '#auth'
+import { getTaskDetailsById } from '~~/server/repositories/TaskRepository'
 
 export default defineEventHandler(async (event) => {
   // Authenticate user
   const session = await getServerSession(event)
-  const user = session?.user
+
   if (!session?.user) {
     throw createError({
       statusCode: 401,
@@ -21,103 +22,12 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const task = await prisma.task.findUnique({
-      where: {
-        id: Number(taskId),
-      },
-      include: {
-        creator: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            role: true,
-          },
-        },
-        assignee: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            role: true,
-          },
-        },
-        project: {
-          select: {
-            id: true,
-            name: true,
-            ownerId: true,
-            userProjects: {
-              select: {
-                userId: true,
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true,
-                    role: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        meetingParticipants: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-                role: true,
-              },
-            },
-          },
-        },
-        timeEntries: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-              },
-            },
-          },
-          orderBy: {
-            date: 'desc',
-          },
-        },
-      },
-    })
+    const task = await getTaskDetailsById(Number(taskId))
 
     if (!task) {
       throw createError({
         statusCode: 404,
         statusMessage: 'Task not found',
-      })
-    }
-
-    // Verify user has access to this task
-    const userId = Number(user?.id)
-    const hasAccess =
-      task.creatorId === userId ||
-      task.assigneeId === userId ||
-      (task.project &&
-        (task.project.ownerId === userId ||
-          task.project.userProjects.some((up) => up.userId === userId))) ||
-      (task.type === 'MEETING' &&
-        task.meetingParticipants.some((mp) => mp.userId === userId))
-
-    if (!hasAccess) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'You do not have access to this task',
       })
     }
 
