@@ -10,7 +10,7 @@ export default defineNuxtConfig({
     authSecret: process.env.AUTH_SECRET,
     authOrigin: process.env.NUXT_AUTH_ORIGIN || 'http://localhost:3000',
     authUrl: process.env.AUTH_URL || 'http://localhost:3000',
-    reportServiceUrl: process.env.REPORT_SERVICE_URL,
+    reportServiceUrl: process.env.REPORT_SERVICE_URL || 'http://localhost:8081',
     reportServiceApiKey: process.env.REPORT_SERVICE_API_KEY,
     primaryLoginProvider: 'google',
     discordClientId: '',
