@@ -15,42 +15,41 @@ function formatDate(date: string) {
   })
 }
 
-const route = useRoute()
-const toast = useToast()
+if (import.meta.client) {
+  const route = useRoute()
+  const toast = useToast()
+  watch(
+    () => route.query.action,
+    (command) => {
+      if (!command) return
+      const [action, id] = command.toString().split(':')
+      if (
+        ['approve', 'reject'].includes(action as any) &&
+        id === props.vacationRequest.id.toString()
+      ) {
+        decide(action as 'approve' | 'reject').then(() => {
+          toast.add({
+            title: 'Action processed',
+            description:
+              action === 'approve'
+                ? 'The vacation request has been approved.'
+                : 'The vacation request has been rejected.',
+            color: action === 'approve' ? 'success' : 'error',
+          })
 
-watch(
-  () => route.query.action,
-  (command) => {
-    if (!command) return
-    const [action, id] = command.toString().split(':')
-    if (
-      ['approve', 'reject'].includes(action as any) &&
-      id === props.vacationRequest.id.toString()
-    ) {
-      console.log(action)
-
-      decide(action as 'approve' | 'reject').then(() => {
-        toast.add({
-          title: 'Action processed',
-          description:
-            action === 'approve'
-              ? 'The vacation request has been approved.'
-              : 'The vacation request has been rejected.',
-          color: action === 'approve' ? 'success' : 'error',
+          navigateTo({
+            path: route.path,
+            query: {
+              ...route.query,
+              action: undefined,
+            },
+          })
         })
-
-        navigateTo({
-          path: route.path,
-          query: {
-            ...route.query,
-            action: undefined,
-          },
-        })
-      })
-    }
-  },
-  { deep: true, immediate: true },
-)
+      }
+    },
+    { deep: true, immediate: true },
+  )
+}
 
 function decide(action: 'approve' | 'reject') {
   return $fetch(`/api/tasks/${props.vacationRequest.id}/${action}`, {

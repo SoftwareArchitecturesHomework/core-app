@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute()
-const { status, signOut, signIn } = useAuth()
+const { status, signOut } = useAuth()
 const { user, canManage } = useUser()
 
 const links = computed<NavigationMenuItem[]>(() => {
