@@ -6,16 +6,15 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui', '@sidebase/nuxt-auth', '@vueuse/nuxt'],
   runtimeConfig: {
     primaryLoginProvider: 'google',
-    googleClientId: process.env.GOOGLE_CLIENT_ID || '',
-    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    discordClientId: '',
-    discordClientSecret: '',
-    authSecret: process.env.AUTH_SECRET,
+    googleClientId: process.env.NUXT_GOOGLE_CLIENT_ID || '',
+    googleClientSecret: process.env.NUXT_GOOGLE_CLIENT_SECRET || '',
+    discordClientId: process.env.NUXT_DISCORD_CLIENT_ID || '',
+    discordClientSecret: process.env.NUXT_DISCORD_CLIENT_SECRET || '',
+    authSecret: process.env.NUXT_AUTH_SECRET,
     authOrigin: process.env.NUXT_AUTH_ORIGIN || 'http://localhost:3000',
-    authUrl: process.env.AUTH_URL || 'http://localhost:3000',
-    commsAPIUrl: '',
-
-    jwtPrivateKey: '',
+    authUrl: process.env.NUXT_AUTH_URL || 'http://localhost:3000',
+    commsAPIUrl: process.env.NUXT_COMMS_API_URL || '',
+    jwtPrivateKey: process.env.NUXT_JWT_PRIVATE_KEY || '',
   },
   app: {
     head: {

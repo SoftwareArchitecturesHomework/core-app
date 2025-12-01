@@ -1,8 +1,9 @@
 import { getServerSession } from '#auth'
 import { prisma } from '~~/server/utils/prisma'
 import {EventCreationDto} from "~~/types/event-creation-dto";
-import {$Enums} from "~~/.generated/prisma/client";
+import { $Enums, type Task } from '~~/.generated/prisma/client'
 import TaskType = $Enums.TaskType;
+import type { User } from '~~/.generated/prisma/client'
 
 
 export default defineEventHandler(async (event) => {
@@ -109,6 +110,23 @@ export default defineEventHandler(async (event) => {
               }
             }
           })
+
+          const userWithManager = await prisma.user.findUnique({
+            where: {
+              id: user.id,
+            },
+            include: {
+              manager: true
+            },
+          });
+          const manager = userWithManager?.manager
+          await useComms().sendVacationRequest(
+            event,
+            user as User,
+            manager as User,
+            task as Task
+          )
+
           console.log('New Task created successfully.');
         }
         return task
