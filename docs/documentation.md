@@ -1,6 +1,6 @@
 # Rendszerterv
 
-![logo](./public/logo-light.png)
+![logo](../public/logo-light.png)
 
 ### Munkahelyi nyilvántartási rendszer
 
@@ -186,106 +186,7 @@ Ez a legalsó réteg, amely a PostgreSQL adatbázist tartalmazza. A Prisma ORM b
 **Adatmodell (Entity-Relationship Diagram)**:
 
 ```mermaid
-erDiagram
-    User ||--o{ Account : "has"
-    User ||--o{ Session : "has"
-    User ||--o{ UserProject : "participates"
-    User ||--o{ TimeEntry : "creates"
-    User ||--o{ Task : "assigned to"
-    User ||--o{ Task : "creates"
-    User ||--o{ MeetingParticipant : "participates"
-    User ||--o| User : "manages (manager-employee)"
-    User ||--o{ Project : "owns"
-
-    Project ||--o{ UserProject : "has"
-    Project ||--o{ Task : "contains"
-
-    Task ||--o{ TimeEntry : "tracked in"
-    Task ||--o{ MeetingParticipant : "has"
-
-    User {
-        int id PK
-        string email UK
-        string password
-        string name
-        string image
-        datetime emailVerified
-        int managerId FK
-        enum role "EMPLOYEE|MANAGER"
-    }
-
-    Account {
-        int id PK
-        int userId FK
-        string type
-        string provider
-        string providerAccountId
-        string refresh_token
-        string access_token
-        int expires_at
-        string token_type
-        string scope
-        string id_token
-        string session_state
-    }
-
-    Session {
-        int id PK
-        string sessionToken UK
-        int userId FK
-        datetime expires
-    }
-
-    VerificationToken {
-        string identifier
-        string token UK
-        datetime expires
-    }
-
-    Project {
-        int id PK
-        string name
-        datetime startDate
-        datetime endDate
-        datetime plannedEndDate
-        int ownerId FK
-    }
-
-    UserProject {
-        int userId FK
-        int projectId FK
-    }
-
-    Task {
-        int id PK
-        enum type "VACATION|MEETING|TASK|INDIVIDUALTASK"
-        int creatorId FK
-        datetime createdAt
-        string name
-        string description
-        int projectId FK "nullable"
-        int assigneeId FK "nullable"
-        datetime dueDate "nullable"
-        boolean isDone
-        datetime startDate "nullable"
-        datetime endDate "nullable"
-        boolean isApproved "nullable"
-    }
-
-    MeetingParticipant {
-        int id PK
-        int meetingId FK
-        int userId FK
-    }
-
-    TimeEntry {
-        int id PK
-        int taskId FK
-        int userId FK
-        datetime date
-        float hours
-        string note
-    }
+TODO generate when schema is final
 ```
 
 **Főbb entitások**:
@@ -301,7 +202,7 @@ erDiagram
 
 ### Repository réteg (Data Access Layer)
 
-A repository réteg (`/server/repositories/`) biztosítja az adathozzáférési logikát. Minden entitáshoz tartozik egy repository, amely elrejti a Prisma specifikus implementációt.
+A repository réteg biztosítja az adathozzáférési logikát. Minden entitáshoz tartozik egy repository, amely elrejti a Prisma specifikus implementációt.
 
 **Felelősségek**:
 
@@ -318,39 +219,27 @@ A repository réteg (`/server/repositories/`) biztosítja az adathozzáférési 
 - `timeEntryRepository.ts` - Munkaidő bejegyzések kezelése
 - `userProjectRepository.ts` - Felhasználó-projekt kapcsolatok
 
-**Példa** (`timeEntryRepository.ts`):
-
-```typescript
-export async function createTimeEntry(data: {
-  userId: number
-  taskId: number
-  hours: number
-  date: Date
-  description?: string
-}) {
-  return await prisma.timeEntry.create({
-    data,
-    include: {
-      task: true,
-      user: true,
-    },
-  })
-}
-```
-
 ### Service réteg (Business Logic Layer)
 
-A service réteg (`/server/services/`) tartalmazza az üzleti logikát. Ez a réteg koordinálja a repository-kat, alkalmazza az üzleti szabályokat és validációkat.
+**Jelenlegi implementáció**:
 
-**Felelősségek**:
+A Core Application esetében a service réteg **jelenleg nincs külön kiválasztva**, mivel az alkalmazás főként CRUD műveleteket végez, ahol az üzleti logika minimális. A legtöbb endpoint esetében a logika elsősorban **validációból** áll (pl. autentikáció ellenőrzés, jogosultság ellenőrzés, input validálás), amely közvetlenül az API rétegben van implementálva.
 
-- Üzleti szabályok alkalmazása
-- Komplex műveletek koordinálása több repository között
-- Validációs logika
-- Adattranszformáció
-- Mikroszerviz hívások koordinálása
+**Komplex üzleti logika elhelyezése**:
 
-**Jelenlegi állapot**: A service réteg részben implementált, több üzleti logika még az API rétegben található (refaktorálás alatt).
+A rendszer architektúrájában a jelentős üzleti logika a **mikroszervizekben** található:
+
+- **Communications Service** (Elixir): Értesítési szabályok, email template generálás, Discord integráció logika
+- **Reporting Service** (Python): Statisztikai számítások, riportgenerálás, adatelemzés
+
+A Core Application felelőssége ezért elsősorban:
+
+- Adatok perzisztálása és lekérése
+- Felhasználói hitelesítés és jogosultságkezelés
+- Alapvető input validáció
+- Mikroszervizek koordinálása REST API hívásokon keresztül
+
+**Jövőbeli fejlesztés**: Amennyiben a Core Application-ben több komplex üzleti logika jelenne meg (pl. összetett munkaidő számítások, automatikus projekt értékelések), akkor érdemes lenne a service réteget kiemelni az API handler-ekből a jobb szeparáció és tesztelhetőség érdekében.
 
 ### API réteg (Route Handlers)
 
@@ -361,58 +250,9 @@ Az API réteg (`/server/api/`) tartalmazza a HTTP végpontokat. Nuxt.js file-bas
 - HTTP kérések fogadása
 - Autentikáció és autorizáció ellenőrzése
 - Request validálás
-- Service réteg hívása
+- Repositoryk hívása
 - Response formázás
 - HTTP státuszkódok kezelése
-
-**Struktúra**:
-
-```
-/server/api/
-  auth/
-    [...].ts          # NextAuth endpoints
-  projects/
-    index.get.ts      # GET /api/projects - Lista lekérés
-    index.post.ts     # POST /api/projects - Létrehozás
-    [id].get.ts       # GET /api/projects/:id - Részletek
-    [id]/users.post.ts # POST /api/projects/:id/users - Felhasználó hozzáadás
-  tasks/
-    index.get.ts      # GET /api/tasks
-    index.post.ts     # POST /api/tasks
-    [id].get.ts       # GET /api/tasks/:id
-  time-entries/
-    index.post.ts     # POST /api/time-entries
-    [id].delete.ts    # DELETE /api/time-entries/:id
-  users/
-    time-administration.get.ts # GET /api/users/time-administration
-```
-
-**Példa endpoint** (`/server/api/time-entries/[id].delete.ts`):
-
-```typescript
-export default defineEventHandler(async (event) => {
-  const session = await getServerSession(event)
-  if (!session?.user) {
-    throw createError({
-      statusCode: 401,
-      message: 'Unauthorized',
-    })
-  }
-
-  const id = parseInt(event.context.params!.id)
-  const timeEntry = await getTimeEntryById(id)
-
-  if (timeEntry.userId !== session.user.id) {
-    throw createError({
-      statusCode: 403,
-      message: 'Forbidden',
-    })
-  }
-
-  await deleteTimeEntry(id)
-  return { success: true }
-})
-```
 
 ### Authentication réteg
 
@@ -429,16 +269,6 @@ Az autentikáció NextAuth (Auth.js) könyvtárral van implementálva (`/server/
 - Token tartalmazza: user id, email, name, role, image
 - Biztonságos titkosítás a NEXTAUTH_SECRET-tel
 
-**Szerepkör alapú hozzáférés-vezérlés**:
-
-```typescript
-// Middleware ellenőrzés
-const session = await getServerSession(event)
-if (session?.user?.role !== 'MANAGER') {
-  throw createError({ statusCode: 403 })
-}
-```
-
 ### Prezentációs réteg (Frontend)
 
 A frontend Vue.js komponensekből áll, Nuxt.js keretrendszerben (`/app/`).
@@ -453,12 +283,18 @@ A frontend Vue.js komponensekből áll, Nuxt.js keretrendszerben (`/app/`).
 
 **Oldalak** (`/app/pages/`):
 
-- `index.vue` - Főoldal
-- `login/index.vue` - Bejelentkezés
+- `login/` - Bejelentkezés
+  ![login](image-5.png)
 - `projects/` - Projekt menedzsment oldalak
+  ![project lis](image.png)
+  ![project details](image-1.png)
 - `tasks/` - Feladat kezelés oldalak
+  ![task details](image-2.png)
 - `administration/` - Adminisztrációs felület
+  ![administration](image-3.png)
 - `approvals/` - Jóváhagyások
+  ![approvals](image-4.png)
+- `calendar/` - naptár nézet
 
 **Composable-ök** (`/app/composables/`):
 
@@ -478,40 +314,84 @@ graph TD
     UI[Prezentációs réteg<br/>Vue komponensek]
     API[API réteg<br/>Route handlers]
     Auth[Authentication réteg<br/>NextAuth]
-    Service[Service réteg<br/>Business Logic]
     Repo[Repository réteg<br/>Data Access]
     DB[(PostgreSQL<br/>Database)]
 
     UI -->|HTTP Request| API
     API -->|Validate| Auth
-    API -->|Call| Service
-    Service -->|Query| Repo
+    API -->|Query| Repo
     Repo -->|Prisma ORM| DB
-
-    style UI fill:#e1f5ff
-    style API fill:#fff4e1
-    style Auth fill:#ffe1f5
-    style Service fill:#e1ffe1
-    style Repo fill:#f5e1ff
-    style DB fill:#ffe1e1
 ```
-
-**Adatfolyam példa** - Munkaidő bejegyzés létrehozása:
-
-1. **UI réteg**: Felhasználó kitölti a formot és submit-ol
-2. **API réteg**: `POST /api/time-entries` fogadja a kérést
-3. **Auth réteg**: NextAuth validálja a JWT tokent, visszaadja a session-t
-4. **API réteg**: Ellenőrzi a jogosultságot (bejelentkezett felhasználó)
-5. **Service réteg**: Validálja az adatokat (óraszám > 0, dátum valid, stb.)
-6. **Repository réteg**: `createTimeEntry()` Prisma query-t futtat
-7. **Database réteg**: PostgreSQL beszúrja az új rekordot
-8. **Repository réteg**: Visszaadja a beszúrt entitást
-9. **API réteg**: JSON response-t formáz
-10. **UI réteg**: Frissíti a komponens állapotát, bezárja a modal-t
 
 **Elvek**:
 
 - **Separation of Concerns**: Minden réteg egyetlen felelősséggel rendelkezik
 - **Dependency Direction**: Fentről lefelé (UI → API → Service → Repository → DB)
 - **Abstraction**: Minden réteg elrejti az implementációs részleteket
-- **Testability**: Rétegek külön-külön unit tesztelhetők (mock-olható függőségek)
+- **Testability**: Rétegek külön-külön unit tesztelhetők
+
+## Mikroszervizek
+
+A rendszer két különálló mikroszervizzel egészül ki, amelyek a Core Application-től függetlenül futnak és specifikus üzleti funkciókat látnak el.
+
+### Communications Service (Elixir/Phoenix)
+
+Az értesítési mikroszerviz Elixir nyelven készült, Phoenix framework-öt használva. Felelős a rendszer összes kimenő kommunikációjáért.
+
+**Technológiai választás indoklása**:
+
+- **Konkurencia**: Az Elixir/BEAM VM kiválóan kezeli a párhuzamos folyamatokat, ami elengedhetetlen több értesítés egyidejű küldéséhez
+- **Hibatűrés**: A "let it crash" filozófia és a supervisor tree-k garantálják, hogy egyedi hibák ne állítsák le a teljes szolgáltatást
+- **Teljesítmény**: Kis memórialábnyom és gyors üzenetkezelés nagy terhelés esetén is
+
+**Felelősségek**:
+
+- Email értesítések küldése (szabadság igénylések, jóváhagyások)
+- Discord webhook integráció
+- Értesítési template-ek kezelése
+- Üzenetsorok kezelése (retry logika hibás küldés esetén)
+- Értesítési preferenciák alkalmazása
+
+**REST API végpontok**:
+
+- `POST /api/notifications/email` - Email küldés
+- `POST /api/notifications/discord` - Discord értesítés
+- `GET /api/notifications/status/:id` - Értesítés státusz lekérdezés
+
+**Megjegyzés**: A részletes implementációt a Communications Service fejlesztői dokumentálják.
+
+### Reporting Service (Python)
+
+A riportgeneráló mikroszerviz Python nyelven készült, adatelemzésre és statisztikák előállítására optimalizálva.
+
+**Technológiai választás indoklása**:
+
+- **Adatelemzés**: Gazdag ökoszisztéma (pandas, numpy) komplex statisztikai számításokhoz
+- **Riportgenerálás**: Matplotlib, Seaborn visualizációs könyvtárak
+- **Egyszerűség**: Gyors prototípus készítés és iteráció
+
+**Felelősségek**:
+
+- Munkaidő statisztikák generálása (havi, negyedéves, éves bontásban)
+- Projekt előrehaladás riportok
+- Dolgozói teljesítmény összesítők
+- Exportálás különböző formátumokba (PDF, Excel, CSV)
+- Adatvisualizáció (grafikonok, diagramok)
+
+**REST API végpontok**:
+
+- `POST /api/reports/time-summary` - Munkaidő összesítő generálás
+- `POST /api/reports/project-progress` - Projekt előrehaladás riport
+- `GET /api/reports/:id/download` - Riport letöltés
+
+**Megjegyzés**: A részletes implementációt a Reporting Service fejlesztői dokumentálják.
+
+### Mikroszerviz kommunikáció
+
+A Core Application REST API hívásokkal kommunikál a mikroszervizekkel:
+
+**Hibakezelés**: Ha egy mikroszerviz nem érhető el, a Core Application továbbra is működik, de a felhasználó figyelmeztetést kap (pl. "Értesítés küldése sikertelen, később újrapróbálkozunk").
+
+# Telepítési leírás
+
+Docker compose
