@@ -186,7 +186,115 @@ Ez a legalsó réteg, amely a PostgreSQL adatbázist tartalmazza. A Prisma ORM b
 **Adatmodell (Entity-Relationship Diagram)**:
 
 ```mermaid
-TODO generate when schema is final
+erDiagram
+  USER {
+    int id PK
+    string email
+    string password
+    string name
+    string image
+    datetime emailVerified
+    int managerId FK
+    string role
+  }
+
+  ACCOUNT {
+    int id PK
+    int userId FK
+    string type
+    string provider
+    string providerAccountId
+    string refresh_token
+    string access_token
+    int expires_at
+    string token_type
+    string scope
+    string id_token
+    string session_state
+  }
+
+  SESSION {
+    int id PK
+    string sessionToken
+    int userId FK
+    datetime expires
+  }
+
+  VERIFICATIONTOKEN {
+    string identifier
+    string token PK
+    datetime expires
+  }
+
+  PROJECT {
+    int id PK
+    string name
+    datetime startDate
+    datetime endDate
+    datetime plannedEndDate
+    int ownerId FK
+  }
+
+  USERPROJECT {
+    int userId FK
+    int projectId FK
+  }
+
+  TASK {
+    int id PK
+    string type
+    int creatorId FK
+    datetime createdAt
+    string name
+    datetime startDate
+    datetime endDate
+    string description
+    int projectId FK
+    int assigneeId FK
+    datetime dueDate
+    bool isDone
+    bool isApproved
+  }
+
+  MEETINGPARTICIPANT {
+    int id PK
+    int meetingId FK
+    int userId FK
+  }
+
+  TIMEENTRY {
+    int id PK
+    int taskId FK
+    int userId FK
+    datetime date
+    float hours
+    string note
+  }
+
+  %% Self-relation: manager ↔ employees
+  USER ||--o{ USER : "manages (managerId)"
+
+  %% User auth
+  USER ||--o{ ACCOUNT : "has accounts"
+  USER ||--o{ SESSION : "has sessions"
+
+  %% Projects
+  USER ||--o{ PROJECT : "owns"
+  USER ||--o{ USERPROJECT : "assigned to projects"
+  PROJECT ||--o{ USERPROJECT : "has users"
+
+  %% Tasks
+  USER ||--o{ TASK : "creates (creator)"
+  USER ||--o{ TASK : "assigned (assignee)"
+  PROJECT ||--o{ TASK : "has tasks"
+
+  %% Meetings (Task with type = MEETING)
+  TASK ||--o{ MEETINGPARTICIPANT : "has participants"
+  USER ||--o{ MEETINGPARTICIPANT : "attends"
+
+  %% Time entries
+  TASK ||--o{ TIMEENTRY : "has time entries"
+  USER ||--o{ TIMEENTRY : "logs time"
 ```
 
 **Főbb entitások**:
