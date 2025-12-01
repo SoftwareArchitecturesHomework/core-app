@@ -12,12 +12,12 @@ export default defineNuxtConfig({
     authUrl: process.env.AUTH_URL || 'http://localhost:3000',
     reportServiceUrl: process.env.REPORT_SERVICE_URL || 'http://localhost:8081',
     reportServiceApiKey: process.env.REPORT_SERVICE_API_KEY,
+    primaryLoginProvider: 'google',
+    discordClientId: '',
+    discordClientSecret: '',
     commsAPIUrl: '',
 
     jwtPrivateKey: '',
-    primaryLoginProvider: 'google',
-    discordClientId: process.env.NUXT_DISCORD_CLIENT_ID || '',
-    discordClientSecret: process.env.NUXT_DISCORD_CLIENT_SECRET || '',
   },
   app: {
     head: {
