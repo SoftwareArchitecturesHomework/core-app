@@ -5,8 +5,11 @@ export default defineNuxtConfig({
   css: ['./app/assets/css/main.css'],
   modules: ['@nuxt/ui', '@sidebase/nuxt-auth', '@vueuse/nuxt'],
   runtimeConfig: {
+    primaryLoginProvider: 'google',
     googleClientId: '',
     googleClientSecret: '',
+    discordClientId: '',
+    discordClientSecret: '',
     authSecret: '',
     authOrigin: '',
     authUrl: '',

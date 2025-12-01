@@ -6,6 +6,29 @@ const password = ref('')
 const loading = ref(false)
 const error = ref('')
 const { signIn, status } = useAuth()
+const route = useRoute()
+const toast = useToast()
+
+watch(
+  () => route.query.notify,
+  (notify) => {
+    if (!notify) return
+    toast.add({
+      title: 'Login failed',
+      description: notify.toString(),
+      color: 'error',
+    })
+
+    navigateTo({
+      path: route.path,
+      query: {
+        ...route.query,
+        notify: undefined,
+      },
+    })
+  },
+  { deep: true, immediate: true },
+)
 
 // Watch for auth status changes and redirect when authenticated
 watch(
@@ -112,17 +135,30 @@ async function handleCredentialsLogin() {
 
         <USeparator label="OR" />
 
-        <UButton
-          block
-          size="lg"
-          color="neutral"
-          variant="outline"
-          icon="i-logos-google-icon"
-          class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-          @click="signIn('google')"
-        >
-          Sign in with Google
-        </UButton>
+        <div class="flex flex-col gap-2">
+          <UButton
+            block
+            size="lg"
+            color="neutral"
+            variant="outline"
+            icon="i-logos-google-icon"
+            class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+            @click="signIn('google')"
+          >
+            Sign in with Google
+          </UButton>
+          <UButton
+            block
+            size="lg"
+            color="neutral"
+            variant="outline"
+            icon="i-logos-discord-icon"
+            class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+            @click="signIn('discord')"
+          >
+            Sign in with Discord
+          </UButton>
+        </div>
       </div>
 
       <template #footer>
