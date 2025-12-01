@@ -51,7 +51,9 @@ async function handleCredentialsLogin() {
         </div>
       </template>
 
-      <div class="flex flex-col gap-6">
+      <div
+        class="flex flex-col justify-center max-md:min-h-[calc(100vh-10rem)] gap-6"
+      >
         <div class="text-center space-y-2">
           <Logo class="size-20 mx-auto mb-4" />
           <p class="text-gray-600 dark:text-gray-400">
