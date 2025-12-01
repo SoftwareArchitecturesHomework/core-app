@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import type { DateValue } from '@internationalized/date'
-import { reactive, shallowRef } from 'vue'
-import type { UserDropdownOption } from '~~/types/user-dropdown-option'
+import { reactive } from 'vue'
 
 const props = defineProps<{
   projectId: number
@@ -27,18 +25,14 @@ const { data: projectParticipants } = await useFetch('/api/users', {
   immediate: !!props.projectId,
 })
 
-const dueDate = shallowRef<DateValue | null>(null)
 const isSubmitting = ref(false)
 const isOpen = ref(false)
 const toast = useToast()
-
-const selectedAssignee = ref<UserDropdownOption | undefined>(undefined)
 
 function resetForm() {
   newTask.name = ''
   newTask.description = ''
   newTask.assigneeId = null
-  dueDate.value = null
 }
 
 function onCancel() {
@@ -125,22 +119,9 @@ async function onSubmit() {
         <div class="space-y-2">
           <label class="block text-sm font-medium">Assignee</label>
           <UserSearchDropdown
-            v-model="selectedAssignee"
+            @update:modelValue="newTask.assigneeId = $event?.value || null"
             :userOptions="projectParticipants || []"
           />
-        </div>
-
-        <div class="space-y-2">
-          <label class="block text-sm font-medium">Due Date</label>
-          <UPopover>
-            <UButton variant="outline" class="w-full justify-start">
-              {{ dueDate ? dueDate.toString() : 'Not set' }}
-            </UButton>
-
-            <template #content>
-              <UCalendar v-model="dueDate" class="w-auto" />
-            </template>
-          </UPopover>
         </div>
 
         <div class="flex justify-end gap-2 pt-4">

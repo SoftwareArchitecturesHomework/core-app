@@ -77,12 +77,63 @@ async function toggleTaskStatus() {
   }
 }
 
+async function deleteTask() {
+  if (!task.value) return
+
+  if (
+    !confirm(
+      'Are you sure you want to delete this task? This action cannot be undone.',
+    )
+  ) {
+    return
+  }
+
+  try {
+    await $fetch(`/api/tasks/${task.value.id}`, {
+      method: 'DELETE',
+    })
+    alert('Task deleted successfully.')
+    navigateTo(`/projects/${task.value.projectId}`)
+  } catch (error) {
+    console.error('Failed to delete task:', error)
+    alert('Failed to delete task. Please try again.')
+  }
+}
+
 function openTimeEntryModal() {
+  if (!isAssignee.value) return
   timeEntryModalOpen.value = true
 }
 
 function openAssigneeModal() {
+  if (!isCreator.value) return
   assigneeModalOpen.value = true
+}
+async function removeAssignee() {
+  if (!task.value) return
+
+  try {
+    await $fetch(`/api/tasks/${task.value.id}/assign`, {
+      method: 'POST',
+      body: { assigneeId: null },
+    })
+    await refresh()
+  } catch (error) {
+    console.error('Failed to remove assignee:', error)
+  }
+}
+
+async function removeTimeEntry(id: number) {
+  if (!task.value) return
+
+  try {
+    await $fetch(`/api/time-entries/${id}`, {
+      method: 'DELETE',
+    })
+    await refresh()
+  } catch (error) {
+    console.error('Failed to remove time entry:', error)
+  }
 }
 </script>
 
@@ -124,6 +175,16 @@ function openAssigneeModal() {
           <h1 class="text-4xl font-bold text-gray-900 dark:text-white">
             {{ task.name || 'Untitled Task' }}
           </h1>
+          <UButton
+            v-if="isCreator"
+            color="error"
+            variant="soft"
+            class="ml-auto"
+            @click="deleteTask"
+          >
+            <UIcon name="i-heroicons-trash" class="w-5 h-5" />
+            Delete task
+          </UButton>
         </div>
       </div>
 
@@ -148,7 +209,7 @@ function openAssigneeModal() {
           </UCard>
 
           <!-- Time Entries Card -->
-          <UCard>
+          <UCard v-if="task.type === 'TASK'">
             <template #header>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -167,6 +228,7 @@ function openAssigneeModal() {
                   color="primary"
                   variant="soft"
                   @click="openTimeEntryModal"
+                  v-if="isAssignee"
                 >
                   Add Time Entry
                 </UButton>
@@ -204,9 +266,22 @@ function openAssigneeModal() {
                       >
                     </div>
                   </div>
-                  <UBadge color="primary" variant="soft"
-                    >{{ entry.hours }}h</UBadge
-                  >
+                  <div class="flex gap-4">
+                    <UBadge color="primary" variant="soft"
+                      >{{ entry.hours }}h</UBadge
+                    >
+                    <UButton
+                      v-if="isAssignee && entry.userId === user?.id"
+                      color="error"
+                      variant="ghost"
+                      size="xs"
+                      circular
+                      @click="removeTimeEntry(entry.id)"
+                    >
+                      <UIcon name="i-heroicons-trash" class="w-4 h-4" />
+                    </UButton>
+                    <div v-else class="h-8 w-8"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -251,7 +326,7 @@ function openAssigneeModal() {
                 </UBadge>
               </div>
               <UButton
-                v-if="isAssignee || isCreator"
+                v-if="isAssignee"
                 :color="task.isDone ? 'info' : 'primary'"
                 block
                 variant="ghost"
@@ -300,44 +375,45 @@ function openAssigneeModal() {
               </div>
 
               <!-- Assignee -->
-              <div
-                v-if="task.type === 'TASK'"
-                @click="openAssigneeModal"
-                class="cursor-pointer group"
-              >
+              <div v-if="task.type === 'TASK'">
                 <label
                   class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide"
                   >Assignee</label
                 >
                 <div
-                  v-if="task.assignee"
-                  class="flex items-center gap-2 mt-2 p-2 rounded-lg transition-colors group-hover:bg-gray-100 dark:group-hover:bg-gray-800"
+                  @click="openAssigneeModal"
+                  class="cursor-pointer"
+                  :class="{ group: isCreator }"
                 >
-                  <UAvatar
-                    :src="task.assignee.image || undefined"
-                    :alt="task.assignee.name || 'User'"
-                    size="sm"
-                  />
-                  <div class="flex-1 min-w-0">
-                    <p
-                      class="font-medium text-sm text-gray-900 dark:text-white truncate"
-                      >{{ task.assignee.name }}
-                    </p>
-                    <p
-                      class="text-xs text-gray-600 dark:text-gray-400 truncate"
-                      >{{ task.assignee.email }}</p
-                    >
+                  <div
+                    class="flex items-center gap-2 mt-2 p-2 rounded-lg transition-colors group-hover:bg-gray-100 dark:group-hover:bg-gray-800"
+                  >
+                    <UAvatar
+                      :src="task.assignee?.image || undefined"
+                      :alt="task.assignee?.name || 'User'"
+                      size="sm"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <p
+                        class="font-medium text-sm text-gray-900 dark:text-white truncate"
+                        >{{ task.assignee?.name || 'Unassigned' }}
+                      </p>
+                      <p
+                        v-if="task.assignee"
+                        class="text-xs text-gray-600 dark:text-gray-400 truncate"
+                        >{{ task.assignee.email }}</p
+                      >
+                    </div>
+                    <UButton
+                      v-if="isCreator && task.assignee"
+                      color="error"
+                      variant="ghost"
+                      size="xs"
+                      icon="i-heroicons-x-mark"
+                      class="shrink-0"
+                      @click.stop="removeAssignee"
+                    />
                   </div>
-                  <UIcon
-                    name="i-heroicons-pencil"
-                    class="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                  />
-                </div>
-                <div v-else class="mt-2 flex justify-center">
-                  <UButton variant="ghost" size="sm" block color="info">
-                    <UIcon name="i-heroicons-plus" class="w-4 h-4" />
-                    Assign
-                  </UButton>
                 </div>
               </div>
               <div
@@ -372,8 +448,8 @@ function openAssigneeModal() {
                       </p>
                       <p
                         class="text-xs text-gray-600 dark:text-gray-400 truncate"
-                        >{{ participant.user.email }}</p
-                      >
+                        >{{ participant.user.email }}
+                      </p>
                     </div>
                   </div>
                 </div>

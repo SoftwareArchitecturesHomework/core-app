@@ -2,8 +2,9 @@ import { getServerSession } from '#auth'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
+  const user = session?.user
 
-  if (!session?.user?.email) {
+  if (!user) {
     throw createError({
       statusCode: 401,
       statusMessage: 'Unauthorized',
@@ -19,34 +20,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Fetch the current user
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  })
-
-  if (!user) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'User not found',
-    })
-  }
-
   // Fetch the task with project info
-  const task = await prisma.task.findUnique({
-    where: { id: taskId },
-    include: {
-      project: {
-        select: {
-          ownerId: true,
-          userProjects: {
-            select: {
-              userId: true,
-            },
-          },
-        },
-      },
-    },
-  })
+  const task = await getTaskWithProjectById(taskId)
 
   if (!task) {
     throw createError({
@@ -56,12 +31,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Verify user has access to toggle this task
-  const hasAccess =
-    task.creatorId === user.id ||
-    task.assigneeId === user.id ||
-    (task.project &&
-      (task.project.ownerId === user.id ||
-        task.project.userProjects.some((up) => up.userId === user.id)))
+  const hasAccess = task.assigneeId === user.id
 
   if (!hasAccess) {
     throw createError({
@@ -70,13 +40,12 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Toggle the task status
-  const updatedTask = await prisma.task.update({
-    where: { id: taskId },
-    data: {
-      isDone: !task.isDone,
-    },
-  })
+  const updatedTask = await toggleTaskCompletion(taskId, !task.isDone)
+
+  const po = task.project?.owner
+  if (po) {
+    useComms().sendTaskCompletion(event, po, task)
+  }
 
   return updatedTask
 })

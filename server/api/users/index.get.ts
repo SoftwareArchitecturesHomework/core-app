@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const query = getQuery(event)
-  const { excludeProjectId } = query
+  const { excludeProjectId, projectId } = query
 
   try {
     let users
@@ -50,6 +50,33 @@ export default defineEventHandler(async (event) => {
           role: true,
         },
       })
+    } else if (projectId) {
+      const projectID = Number.parseInt(projectId as string)
+
+      if (Number.isNaN(projectID)) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: 'Invalid project ID',
+        })
+      }
+
+      // Get users who are participants in the project
+      const projectParticipants = await prisma.userProject.findMany({
+        where: { projectId: projectID },
+        select: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+              role: true,
+            },
+          },
+        },
+      })
+
+      users = projectParticipants.map((p) => p.user)
     } else {
       // Return all users
       users = await prisma.user.findMany({

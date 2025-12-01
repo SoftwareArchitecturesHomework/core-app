@@ -1,7 +1,8 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam, readBody } from 'h3'
+import type { User } from '~~/.generated/prisma/client'
 
-const VALID_TYPES = ['VACATION', 'MEETING', 'TASK', 'INDIVIDUALTASK']
+const VALID_TYPES = ['MEETING', 'TASK'] as const
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
@@ -57,14 +58,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Check if the project exists and if the user has access to it
-    const project = await prisma.project.findUnique({
-      where: { id },
-      include: {
-        userProjects: {
-          where: { userId: user.id },
-        },
-      },
-    })
+    const project = await getProjectDetailsById(id)
 
     if (!project) {
       throw createError({
@@ -85,35 +79,47 @@ export default defineEventHandler(async (event) => {
     }
 
     // If assigneeId is provided, verify they are a participant
+    let assignee: Pick<User, 'email' | 'name'> | null = null
     if (assigneeId) {
-      const assignee = await prisma.userProject.findUnique({
+      const relation = await prisma.userProject.findUnique({
         where: {
           projectId_userId: {
             projectId: id,
             userId: assigneeId,
           },
         },
+        include: {
+          user: {
+            select: {
+              email: true,
+              name: true,
+            },
+          },
+        },
       })
 
-      if (!assignee) {
+      if (!relation) {
         throw createError({
           statusCode: 400,
           statusMessage: 'Assignee must be a participant in the project',
         })
       }
+      assignee = relation.user
     }
 
     // Create the task
-    const task = await prisma.task.create({
-      data: {
-        name,
-        description: description || null,
-        type,
-        projectId: id,
-        creatorId: user.id,
-        assigneeId: assigneeId || null,
-      },
-    })
+    const task = await createTaskForProject(
+      name,
+      type,
+      description,
+      id,
+      user.id,
+      assigneeId || null,
+    )
+
+    if (assignee) {
+      useComms().sendTaskAssignment(event, user as User, assignee, task)
+    }
 
     return task
   } catch (error: any) {

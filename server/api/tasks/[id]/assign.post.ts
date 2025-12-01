@@ -1,4 +1,5 @@
 import { getServerSession } from '#auth'
+import type { User } from '~~/.generated/prisma/client'
 
 export default defineEventHandler(async (event) => {
   // Authenticate user
@@ -35,22 +36,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Fetch task with project info
-    const task = await prisma.task.findUnique({
-      where: { id: Number(taskId) },
-      include: {
-        project: {
-          select: {
-            id: true,
-            ownerId: true,
-            userProjects: {
-              select: {
-                userId: true,
-              },
-            },
-          },
-        },
-      },
-    })
+    const task = await getTaskWithProjectById(Number(taskId))
 
     if (!task) {
       throw createError({
@@ -70,9 +56,8 @@ export default defineEventHandler(async (event) => {
     // Verify user has permission (must be creator or project owner)
     const userId = Number(user.id)
     const isCreator = task.creatorId === userId
-    const isProjectOwner = task.project.ownerId === userId
 
-    if (!isCreator && !isProjectOwner) {
+    if (!isCreator) {
       throw createError({
         statusCode: 403,
         statusMessage:
@@ -95,23 +80,17 @@ export default defineEventHandler(async (event) => {
     }
 
     // Update task assignee
-    const updatedTask = await prisma.task.update({
-      where: { id: Number(taskId) },
-      data: {
-        assigneeId: assigneeId !== null ? Number(assigneeId) : null,
-      },
-      include: {
-        assignee: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            role: true,
-          },
-        },
-      },
-    })
+    const updatedTask = await changeTaskAssignee(
+      Number(taskId),
+      assigneeId !== null ? Number(assigneeId) : null,
+    )
+
+    useComms().sendTaskAssignment(
+      event,
+      user as User,
+      updatedTask.assignee as User,
+      updatedTask,
+    )
 
     return updatedTask
   } catch (error: any) {

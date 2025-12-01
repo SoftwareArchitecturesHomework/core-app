@@ -1,5 +1,6 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam, readBody } from 'h3'
+import type { User } from '~~/.generated/prisma/client'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
@@ -42,9 +43,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Check if the project exists and if the current user is the owner
-    const project = await prisma.project.findUnique({
-      where: { id },
-    })
+    const project = await getProjectDetailsById(id)
 
     if (!project) {
       throw createError({
@@ -61,9 +60,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Check if user exists
-    const userToAdd = await prisma.user.findUnique({
-      where: { id: userId },
-    })
+    const userToAdd = await getUserById(userId)
 
     if (!userToAdd) {
       throw createError({
@@ -73,16 +70,11 @@ export default defineEventHandler(async (event) => {
     }
 
     // Check if user is already a participant
-    const existingParticipant = await prisma.userProject.findUnique({
-      where: {
-        projectId_userId: {
-          projectId: id,
-          userId: userId,
-        },
-      },
-    })
+    const isParticipant = project.userProjects
+      .map((up) => up.userId)
+      .includes(userId)
 
-    if (existingParticipant) {
+    if (isParticipant) {
       throw createError({
         statusCode: 400,
         statusMessage: 'User is already a participant in this project',
@@ -90,25 +82,15 @@ export default defineEventHandler(async (event) => {
     }
 
     // Add the participant
-    const userProject = await prisma.userProject.create({
-      data: {
-        projectId: id,
-        userId: userId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            role: true,
-          },
-        },
-      },
-    })
+    const addedUser = await addUserToProject(id, userId)
+    useComms().sendAddedToProjectNotification(
+      event,
+      user as User,
+      userToAdd,
+      project,
+    )
 
-    return userProject
+    return addedUser
   } catch (error: any) {
     if (error.statusCode) {
       throw error

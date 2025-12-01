@@ -31,36 +31,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const project = await prisma.project.findUnique({
-      where: {
-        id: projectId,
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            role: true,
-          },
-        },
-        userProjects: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-                role: true,
-              },
-            },
-          },
-        },
-        tasks: true,
-      },
-    })
+    const project = await getProjectDetailsById(projectId)
 
     if (!project) {
       throw createError({

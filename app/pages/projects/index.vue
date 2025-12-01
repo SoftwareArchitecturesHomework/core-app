@@ -2,7 +2,7 @@
 useHead({
   title: 'Projects',
 })
-const { userId, canCreateProject } = useUser()
+const { userId } = useUser()
 const { data: participatedProjects, refresh: refreshParticipated } =
   await useFetch('/api/projects', {
     query: computed(() =>
@@ -26,7 +26,7 @@ const { data: participatedProjects, refresh: refreshParticipated } =
     </div>
 
     <!-- Projects you own (for managers/admins) -->
-    <ProjectList v-if="canCreateProject" @created="refreshParticipated()" />
+    <ProjectList @created="refreshParticipated()" />
 
     <!-- Projects you participate in -->
     <div class="mb-8">
@@ -45,7 +45,7 @@ const { data: participatedProjects, refresh: refreshParticipated } =
           v-for="project in participatedProjects"
           :key="project.id"
           :project="project"
-          :role="'member'"
+          role="member"
         />
       </div>
 

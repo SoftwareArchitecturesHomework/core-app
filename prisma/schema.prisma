@@ -13,6 +13,7 @@ datasource db {
 model User {
   id                  Int                  @id @default(autoincrement())
   email               String?              @unique
+  password            String?
   name                String?
   image               String?
   emailVerified       DateTime?
@@ -98,21 +99,37 @@ model MeetingParticipant {
 }
 
 model Task {
-  id                  Int                  @id @default(autoincrement())
-  type                TaskType
-  creatorId           Int
-  creator             User                 @relation("TaskCreator", fields: [creatorId], references: [id])
-  name                String?
+  id          Int      @id @default(autoincrement())
+  type        TaskType
+  creatorId   Int
+  creator     User     @relation("TaskCreator", fields: [creatorId], references: [id])
+  createdAt   DateTime @default(now())
+  name        String?
   startDate           DateTime?
   endDate             DateTime?
-  description         String?
-  isDone              Boolean              @default(false)
-  project             Project?             @relation("ProjectTasks", fields: [projectId], references: [id])
-  projectId           Int?
-  timeEntries         TimeEntry[]
-  assignee            User?                @relation("TaskAssignees", fields: [assigneeId], references: [id])
-  assigneeId          Int?
+  description String?
+
+  //Only for type TASK and MEETING
+  project   Project? @relation("ProjectTasks", fields: [projectId], references: [id])
+  projectId Int?
+
+  //Only for type Task and INDIVIDUALTASK
+  assignee   User?     @relation("TaskAssignees", fields: [assigneeId], references: [id])
+  assigneeId Int?
+  dueDate    DateTime?
+  isDone     Boolean?  @default(false)
+
+  // Only for type Meeting and Vacation
+  startDate           DateTime?
+  endDate             DateTime?
+  // Only for type MEETING
   meetingParticipants MeetingParticipant[] @relation("MeetingParticipants")
+
+  //Only for type VACATION
+  isApproved Boolean?
+
+  //Only for type TASK
+  timeEntries TimeEntry[]
 }
 
 model TimeEntry {
@@ -130,7 +147,6 @@ model TimeEntry {
 enum Role {
   EMPLOYEE
   MANAGER
-  ADMIN
 }
 
 enum TaskType {

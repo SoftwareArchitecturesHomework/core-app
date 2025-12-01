@@ -2,8 +2,9 @@ import { getServerSession } from '#auth'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
+  const user = session?.user
 
-  if (!session?.user?.email) {
+  if (!user) {
     throw createError({
       statusCode: 401,
       statusMessage: 'Unauthorized',
@@ -18,23 +19,8 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Invalid project ID',
     })
   }
-
-  // Fetch the current user
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  })
-
-  if (!user) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'User not found',
-    })
-  }
-
   // Fetch the project
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-  })
+  const project = await getProjectById(projectId)
 
   if (!project) {
     throw createError({
@@ -70,12 +56,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Update the project with the current date as endDate
-  const updatedProject = await prisma.project.update({
-    where: { id: projectId },
-    data: {
-      endDate: currentDate,
-    },
-  })
+  const updatedProject = await closeProject(projectId)
 
   return updatedProject
 })
