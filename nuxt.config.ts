@@ -5,11 +5,11 @@ export default defineNuxtConfig({
   css: ['./app/assets/css/main.css'],
   modules: ['@nuxt/ui', '@sidebase/nuxt-auth', '@vueuse/nuxt'],
   runtimeConfig: {
-    googleClientId: process.env.GOOGLE_CLIENT_ID || '',
-    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    authSecret: process.env.AUTH_SECRET || '',
-    authOrigin: process.env.AUTH_ORIGIN || '',
-    authUrl: process.env.AUTH_URL || '',
+    googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+    googleClientSecret: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_SECRET || '',
+    authSecret: process.env.NUXT_PUBLIC_AUTH_SECRET || '',
+    authOrigin: process.env.NUXT_PUBLIC_AUTH_ORIGIN || '',
+    authUrl: process.env.NUXT_PUBLIC_AUTH_URL || '',
     commsAPIUrl: '',
 
     jwtPrivateKey: '',

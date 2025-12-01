@@ -1,6 +1,6 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam, readBody } from 'h3'
-import { getProjectById, getProjectDetailsById } from '~~/server/repositories/projectRepository'
+import { getProjectDetailsById } from '~~/server/repositories/projectRepository'
 import { addUserToProject } from '~~/server/repositories/userProjectRepository'
 import { getUserById } from '~~/server/repositories/userRepository'
 
@@ -72,7 +72,9 @@ export default defineEventHandler(async (event) => {
     }
 
     // Check if user is already a participant
-    const isParticipant = project.userProjects.map(up => up.userId).includes(userId)
+    const isParticipant = project.userProjects
+      .map((up) => up.userId)
+      .includes(userId)
 
     if (isParticipant) {
       throw createError({

@@ -1,8 +1,6 @@
 import { getServerSession } from '#auth'
-import { create } from 'domain'
-import { get } from 'http'
 import { getTaskWithProjectById } from '~~/server/repositories/TaskRepository'
-import { createTimeEntry } from '~~/server/repositories/TimeEntryRepository'
+import { createTimeEntry } from '~~/server/repositories/timeEntryRepository'
 
 export default defineEventHandler(async (event) => {
   // Authenticate user
@@ -47,8 +45,7 @@ export default defineEventHandler(async (event) => {
 
     // Verify user has access to the task
     const userId = Number(user.id)
-    const hasAccess =
-      task.assigneeId === userId
+    const hasAccess = task.assigneeId === userId
 
     if (!hasAccess) {
       throw createError({
@@ -58,7 +55,13 @@ export default defineEventHandler(async (event) => {
     }
 
     // Create time entry
-    return await createTimeEntry(Number(taskId), userId, new Date(date), hours, note || null)
+    return await createTimeEntry(
+      Number(taskId),
+      userId,
+      new Date(date),
+      hours,
+      note || null,
+    )
   } catch (error: any) {
     if (error.statusCode) {
       throw error

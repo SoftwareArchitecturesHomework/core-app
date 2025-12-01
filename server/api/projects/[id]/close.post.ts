@@ -1,5 +1,8 @@
 import { getServerSession } from '#auth'
-import { closeProject, getProjectById } from '~~/server/repositories/projectRepository'
+import {
+  closeProject,
+  getProjectById,
+} from '~~/server/repositories/projectRepository'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)

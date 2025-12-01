@@ -1,5 +1,8 @@
 import { getServerSession } from '#auth'
-import { changeTaskAssignee, getTaskWithProjectById } from '~~/server/repositories/TaskRepository'
+import {
+  changeTaskAssignee,
+  getTaskWithProjectById,
+} from '~~/server/repositories/TaskRepository'
 
 export default defineEventHandler(async (event) => {
   // Authenticate user
@@ -80,7 +83,10 @@ export default defineEventHandler(async (event) => {
     }
 
     // Update task assignee
-    const updatedTask = await changeTaskAssignee(Number(taskId), assigneeId !== null ? Number(assigneeId) : null)
+    const updatedTask = await changeTaskAssignee(
+      Number(taskId),
+      assigneeId !== null ? Number(assigneeId) : null,
+    )
 
     return updatedTask
   } catch (error: any) {

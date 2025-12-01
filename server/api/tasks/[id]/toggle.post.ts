@@ -1,5 +1,8 @@
 import { getServerSession } from '#auth'
-import { getTaskWithProjectById, toggleTaskCompletion } from '~~/server/repositories/TaskRepository'
+import {
+  getTaskWithProjectById,
+  toggleTaskCompletion,
+} from '~~/server/repositories/TaskRepository'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
