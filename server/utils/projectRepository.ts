@@ -51,6 +51,15 @@ export async function getProjectByParticipantId(participantId: number) {
   })
 }
 
+export async function getOwnedProject(ownerId: number, projectId: number) {
+  return prisma.project.findUnique({
+    where: {
+      ownerId: ownerId,
+      id: projectId,
+    },
+  })
+}
+
 export async function getProjectById(projectId: number) {
   return await prisma.project.findUnique({
     where: {

@@ -1,6 +1,4 @@
 import { getServerSession } from '#auth'
-import { createProject } from '~~/server/repositories/projectRepository'
-import { ProjectCreationDto } from '~~/types/project-creation-dto'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)

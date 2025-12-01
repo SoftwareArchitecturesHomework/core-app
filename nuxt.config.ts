@@ -24,9 +24,18 @@ export default defineNuxtConfig({
     },
   },
 
+  nitro: {
+    routeRules: {
+      '/api/**': { cors: true },
+    },
+  },
   $development: {
     nitro: {
       plugins: ['~~/server/dev-plugins/db-seed'],
+    },
+    devServer: {
+      host: '0.0.0.0',
+      port: 3000,
     },
   },
 

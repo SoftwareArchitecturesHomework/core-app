@@ -1,9 +1,4 @@
 import { getServerSession } from '#auth'
-import { getUsersForTimeAdministration } from '~~/server/repositories/userRepository'
-import {
-  getWorkingDaysInMonth,
-  getWorkingDaysInRange,
-} from '~~/server/utils/date-utils'
 
 type TimeAdministrationResponse = {
   id: number
