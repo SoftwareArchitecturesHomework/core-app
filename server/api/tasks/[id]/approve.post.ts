@@ -2,7 +2,7 @@ import { getServerSession } from '#auth'
 import {
   approveVacationRequest,
   getTaskWithCreatorById,
-} from '~~/server/repositories/TaskRepository'
+} from '~~/server/repositories/taskRepository'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)

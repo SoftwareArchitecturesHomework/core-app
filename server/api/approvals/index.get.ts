@@ -1,6 +1,6 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler } from 'h3'
-import { getPendingVacationRequestsForManager } from '~~/server/repositories/TaskRepository'
+import { getPendingVacationRequestsForManager } from '~~/server/repositories/taskRepository'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
