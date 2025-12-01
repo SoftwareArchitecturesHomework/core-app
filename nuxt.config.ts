@@ -8,15 +8,16 @@ export default defineNuxtConfig({
     googleClientId: process.env.GOOGLE_CLIENT_ID || '',
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     authSecret: process.env.AUTH_SECRET,
+    authOrigin: process.env.NUXT_AUTH_ORIGIN || 'http://localhost:3000',
+    authUrl: process.env.AUTH_URL || 'http://localhost:3000',
+    reportServiceUrl: process.env.REPORT_SERVICE_URL,
+    reportServiceApiKey: process.env.REPORT_SERVICE_API_KEY,
+    commsAPIUrl: '',
+
+    jwtPrivateKey: '',
     primaryLoginProvider: 'google',
     discordClientId: process.env.NUXT_DISCORD_CLIENT_ID || '',
     discordClientSecret: process.env.NUXT_DISCORD_CLIENT_SECRET || '',
-    authOrigin: process.env.NUXT_AUTH_ORIGIN || 'http://localhost:3000',
-    authUrl: process.env.NUXT_AUTH_URL || 'http://localhost:3000',
-    reportServiceUrl: process.env.REPORT_SERVICE_URL,
-    reportServiceApiKey: process.env.REPORT_SERVICE_API_KEY,
-    commsAPIUrl: process.env.NUXT_COMMS_API_URL || '',
-    jwtPrivateKey: process.env.NUXT_JWT_PRIVATE_KEY || '',
   },
   app: {
     head: {
