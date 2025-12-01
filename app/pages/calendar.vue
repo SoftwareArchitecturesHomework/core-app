@@ -1,1 +1,0 @@
-<template>LOL</template>

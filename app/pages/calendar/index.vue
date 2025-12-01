@@ -1,20 +1,19 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, shallowRef } from 'vue';
+import { ref, watch } from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import type {ExtendedUser} from "~~/types/extended-user";
-import TaskCreationModal from "~/components/TaskCreationModal.vue";
+import EventCreationModal from "~/components/EventCreationModal.vue";
 
+const { data: events, refresh: refreshEvents } = await useFetch('/api/events');
 
-const { data: session } = useAuth()
-const user = computed(() => session.value?.user as ExtendedUser | undefined)
 
 const isWeeklyView = ref(true);
 const isModalOpen = ref(false);
 const fullCalendar = ref(null);
 const eventType = ref('');
+const selectedEvent = ref({});
 const calendarOptions = ref({
   plugins: [timeGridPlugin, dayGridPlugin, interactionPlugin],
   initialView: 'timeGridWeek',
@@ -22,14 +21,19 @@ const calendarOptions = ref({
   buttonText: { today: 'Today' },
   expandRows: true,
   firstDay: 1,
+  timeZone:'local',
+  forceEventDuration: true,
+  eventClick: function eventClick(info){
+    setEventById(info.event.id)
+  }
 });
 const menuItems = ref([
   [
     {
-      label: 'Task',
+      label: 'Event',
       icon: 'i-lucide-code',
       color: 'primary',
-      onSelect: () => openModal('Task')
+      onSelect: () => openModal('Event')
     },
     {
       label: 'Meeting',
@@ -45,9 +49,37 @@ const menuItems = ref([
     }
   ]
 ]);
-const { data: assignedTasks, refresh: refreshTask } = await useFetch('/api/tasks')
+type TaskTypeString = 'VACATION' | 'MEETING' | 'TASK' | 'EVENT';
+const getEventColor = (type: TaskTypeString): string => {
+  switch (type) {
+    case 'MEETING':
+      return '#36a2eb'; // Kék
+    case 'VACATION':
+      return '#ff6384'; // Piros
+    case 'TASK':
+      return '#ff9f40'; // Narancs
+    default:
+      return '#4bc0c0'; // Zöld
+  }
+};
 
+function setEventById(id: number){
+  if(eventType !== 'Vacation') {
+    const eventList = events.value;
 
+    if (!eventList || eventList.length === 0) {
+      console.warn('Event list is empty or not yet loaded.');
+      return undefined;
+    }
+    selectedEvent.value = eventList.find(event => event.id == id);
+    switch(selectedEvent.value.type){
+      case 'EVENT': eventType.value = 'Event'; isModalOpen.value= true; break;
+      case 'MEETING': eventType.value = 'Meeting'; isModalOpen.value= true; break;
+      case 'TASK': eventType.value = 'Task'; isModalOpen.value= true; break;
+      case 'VACATION': eventType.value = 'Vacation'; break;
+    }
+  }
+}
 
 function toggleView() {
   const calendarApi = fullCalendar.value.getApi();
@@ -59,21 +91,56 @@ function openModal(event: string) {
   isModalOpen.value=true;
 }
 
+function eventCreatedOrCanceled(){
+  const selectedEvent = ref({});
+  refreshEvents()
+}
 
 
 watch(isWeeklyView, () => {
   toggleView();
 });
 
-onMounted(() => {
-  // A FullCalendar API-t használjuk az események hozzáadásához
-  // Bár a tömb módosítás is működik, az API a robusztusabb:
-  // Ha nem globális objektum, akkor inicializáljuk a tömböt:
-  calendarOptions.value.events = [
-    { title: 'Projekt indítás', date: '2025-11-24T11:00:00', color: '#ff6384' },
-    { title: 'Tervezés', date: '2025-12-01T14:30:00', color: '#36a2eb' }
-  ];
-});
+watch(events, (nyersTasks) => {
+    let transformedEvents = [];
+
+    if (nyersTasks && nyersTasks.length > 0) {
+      transformedEvents = nyersTasks.map(task => {
+        let startDate = task.startDate ? new Date(task.startDate) : null;
+        let start = startDate ? startDate.toISOString() : null
+        let endDate = task.endDate ? new Date(task.endDate) : null;
+        let end = endDate ? endDate.toISOString() : null;
+        let isFullDay = false;
+
+        if (startDate && endDate) {
+          const isStartMidnight = startDate.getUTCHours() === 23 && startDate.getUTCMinutes() === 0;
+          const isEndEndOfDay = endDate.getUTCHours() === 22 && endDate.getUTCMinutes() >= 59;
+          if (isStartMidnight && isEndEndOfDay) {
+            isFullDay = true;
+            startDate.setUTCDate(startDate.getUTCDate()+1);
+            start =  startDate.toISOString().split('T')[0]
+            endDate.setUTCDate(endDate.getUTCDate()+1);
+            end = endDate.toISOString().split('T')[0]
+          }
+        }
+
+        return {
+          title: task.name || `${task.type}`,
+          start: start,
+          end: end,
+          color: getEventColor(task.type as TaskTypeString),
+          id: String(task.id),
+          allDay: isFullDay
+        };
+      });
+    }
+
+    calendarOptions.value.events=transformedEvents
+  },
+  { immediate: true, deep: true }
+);
+
+
 </script>
 
 <template>
@@ -100,7 +167,7 @@ onMounted(() => {
       <FullCalendar :options="calendarOptions" ref="fullCalendar" />
     </div>
 
-    <TaskCreationModal v-model:isModalOpen="isModalOpen" :event-type="eventType"></TaskCreationModal>
+    <EventCreationModal v-model:isModalOpen="isModalOpen" v-model:event-type="eventType" v-model:selected-event="selectedEvent" @created="eventCreatedOrCanceled()" @cancel = "eventCreatedOrCanceled"></EventCreationModal>
 
 
   </div>

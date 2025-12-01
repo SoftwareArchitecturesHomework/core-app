@@ -21,8 +21,27 @@ export default defineEventHandler(async (event) => {
 
     return prisma.task.findMany({
         where: {
-            assigneeId: user.id,
+          OR:[
+            {
+              assigneeId: user.id,
+            },
+            {
+              creatorId: user.id
+            }
+          ]
         },
+      include: {
+        meetingParticipants: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              }
+            }
+          }
+        }
+      }
     })
 
 })

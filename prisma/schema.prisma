@@ -99,14 +99,14 @@ model MeetingParticipant {
 }
 
 model Task {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   type        TaskType
   creatorId   Int
-  creator     User     @relation("TaskCreator", fields: [creatorId], references: [id])
-  createdAt   DateTime @default(now())
+  creator     User      @relation("TaskCreator", fields: [creatorId], references: [id])
+  createdAt   DateTime  @default(now())
   name        String?
-  startDate           DateTime?
-  endDate             DateTime?
+  startDate   DateTime?
+  endDate     DateTime?
   description String?
 
   //Only for type TASK and MEETING
@@ -114,14 +114,10 @@ model Task {
   projectId Int?
 
   //Only for type Task and INDIVIDUALTASK
-  assignee   User?     @relation("TaskAssignees", fields: [assigneeId], references: [id])
-  assigneeId Int?
-  dueDate    DateTime?
-  isDone     Boolean?  @default(false)
-
-  // Only for type Meeting and Vacation
-  startDate           DateTime?
-  endDate             DateTime?
+  assignee            User?                @relation("TaskAssignees", fields: [assigneeId], references: [id])
+  assigneeId          Int?
+  dueDate             DateTime?
+  isDone              Boolean?             @default(false)
   // Only for type MEETING
   meetingParticipants MeetingParticipant[] @relation("MeetingParticipants")
 
@@ -153,5 +149,5 @@ enum TaskType {
   VACATION
   MEETING
   TASK
-  INDIVIDUALTASK
+  EVENT
 }

@@ -6,13 +6,13 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui', '@sidebase/nuxt-auth', '@vueuse/nuxt'],
   runtimeConfig: {
     primaryLoginProvider: 'google',
-    googleClientId: '',
-    googleClientSecret: '',
+    googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     discordClientId: '',
     discordClientSecret: '',
-    authSecret: '',
-    authOrigin: '',
-    authUrl: '',
+    authSecret: process.env.AUTH_SECRET,
+    authOrigin: process.env.NUXT_AUTH_ORIGIN || 'http://localhost:3000',
+    authUrl: process.env.AUTH_URL || 'http://localhost:3000',
     commsAPIUrl: '',
 
     jwtPrivateKey: '',

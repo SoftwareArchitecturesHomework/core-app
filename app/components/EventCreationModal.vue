@@ -1,18 +1,10 @@
 <script setup lang="ts">
-import {ref, shallowRef} from "vue";
-import {now, Time, today} from "@internationalized/date";
-import type {TaskCreationDto} from "~~/types/task-creation-dto";
-import type {ExtendedUser} from "~~/types/extended-user";
+import {ref} from "vue";
+import { parseAbsoluteToLocal,getLocalTimeZone, now, Time, today, CalendarDate } from '@internationalized/date'
+import type {EventCreationDto} from "~~/types/event-creation-dto";
 
-const { data: session } = useAuth()
-const user = computed(() => session.value?.user as ExtendedUser | undefined)
-const participantId = ref<number | undefined>(undefined);
+const {userId} = useUser()
 
-watch(user, (newUser) => {
-  if (newUser?.id && participantId.value !== newUser.id) {
-    participantId.value = newUser.id;
-  }
-}, { immediate: true });
 
 const props= defineProps({
   isModalOpen: {
@@ -21,7 +13,11 @@ const props= defineProps({
   },
   eventType: {
     type: String,
-    default:'Task'
+    default:'Event'
+  },
+  selectedEvent: {
+    type: Object,
+    default:null
   }
 });
 
@@ -29,25 +25,37 @@ const emit = defineEmits<{
   (e: 'update:isModalOpen', value: boolean): void;
 }>();
 
+let operation = ref('Create New')
 const toast = useToast()
 const title = ref('');
 const description = ref('');
-const startDate = shallowRef(today());
-const startTime = shallowRef(now());
-const endDate = shallowRef(today());
-const endTime = shallowRef(now());
+const TIMEZONE = getLocalTimeZone();
+const startDate = ref(today(TIMEZONE));
+const startTime = ref(now(TIMEZONE));
+const endDate = ref(today(TIMEZONE));
+const endTime = ref(now(TIMEZONE));
 const isAllDay = ref(false);
+const taskId = ref<number | null> (null);
 const currentStep = ref(0);
-const allUsers = ['John Doe','Jane Smith','Robert Brown']
+const allUsers = ref([])
 const invitees = ref([])
-const { data: participatedProjects} = await useFetch('/api/projects', {
-  query: computed(() => {
-    if (!participantId.value) return {}
-    return { participantId: participantId.value }
-  }),
-})
-const projectsOptions = ref ([])
-const selectedProjectId =ref<number | undefined>(undefined);
+
+
+const { data: participateProjects} = await useFetch('/api/projects',
+  { query: computed(() =>
+      userId.value ? { participantId: userId.value } : undefined,
+    ),
+    transform: (data) => {
+      return data?.map(project => ({
+        label: project.name,
+        value: String(project.id),
+      }))
+    }
+  }
+)
+
+const selectedProject =ref({});
+
 const stepperItems = ref([
   {
     title: 'Details',
@@ -85,38 +93,67 @@ function prevStep() {
 
 function cancel() {
   emit('update:isModalOpen', false)
+  emit('cancel')
+  title.value = '';
+  description.value = '';
+  startDate.value = today(TIMEZONE);
+  startTime.value = now(TIMEZONE);
+  endDate.value = today(TIMEZONE);
+  endTime.value = now(TIMEZONE);
+  isAllDay.value = false;
   currentStep.value = 0;
+  allUsers.value = []
+  invitees.value = []
+  selectedProject.value = {}
+  operation.value = 'Create New'
+  taskId.value = null;
 }
 
 async function save(){
   try {
+    if(props.eventType === 'Vacation'){
+      startTime.value = new Time(0, 0);
+      endTime.value = new Time(23, 59);
+    }
+
     const startDateString = startDate.value.toString();
     const formattedStartTime = `${String(startTime.value.hour).padStart(2, '0')}:${String(startTime.value.minute).padStart(2, '0')}`;
-    const isoStartString = `${startDateString}T${formattedStartTime}:00`;
+    const isoStartString = `${startDateString}T${formattedStartTime}:00.000+01:00`;
 
     const endDateString = endDate.value.toString();
     const formattedEndTime = `${String(endTime.value.hour).padStart(2, '0')}:${String(endTime.value.minute).padStart(2, '0')}`;
-    const isoEndString = `${endDateString}T${formattedEndTime}:00`;
+    const isoEndString = `${endDateString}T${formattedEndTime}:00.000+01:00`;
 
-    const dto: TaskCreationDto = {
+    const dtoProjectId =
+      (selectedProject.value && selectedProject.value.value && selectedProject.value.value !== '')
+        ? Number(selectedProject.value.value)
+        : null;
+
+    const participantId = invitees.value
+      .map(item => item.value)
+      .filter(value => value !== '')
+      .map (value => Number(value));
+
+    const dto: EventCreationDto = {
       type: props.eventType,
       name: title.value,
       description: description.value,
       startDate: isoStartString,
       endDate: isoEndString,
-      projectName: null
+      projectId: dtoProjectId,
+      taskId: taskId.value,
+      participantIds: participantId
     }
 
-    console.log('dto: ', dto)
 
-    const task = await $fetch('/api/tasks', {
+    const event = await $fetch('/api/events', {
       method: 'POST',
       body: dto
     })
 
     toast.add({
       title: 'Success',
-      description: 'Task created successfully',
+      description: 'Event created successfully',
       color: 'primary',
       icon: 'i-heroicons-check-circle'
     })
@@ -124,18 +161,29 @@ async function save(){
 
     console.log('Event Saved Successfully');
 
-    // Ide jönne a FullCalendar API hívása (addEvent)
-    // Ideális esetben a FullCalendar-t frissítenénk az új eseménnyel.
-
-
     emit('update:isModalOpen', false)
+    emit('created')
+
+    title.value = '';
+    description.value = '';
+    startDate.value = today(TIMEZONE);
+    startTime.value = now(TIMEZONE);
+    endDate.value = today(TIMEZONE);
+    endTime.value = now(TIMEZONE);
+    isAllDay.value = false;
     currentStep.value = 0;
+    allUsers.value = []
+    invitees.value = []
+    selectedProject.value = {}
+    operation.value = 'Create New'
+    taskId.value = null;
+
 
   } catch (error) {
     console.error('Error saving event:', error);
     toast.add({
       title: 'Error',
-      description: 'Failed to create task. Please try again.',
+      description: 'Failed to create event. Please try again.',
       color: 'error',
       icon: 'i-heroicons-exclamation-circle'
     })
@@ -145,44 +193,91 @@ async function save(){
 function isAllDayChanged() {
   if (isAllDay.value) {
     startTime.value = new Time(0, 0);
-    endTime.value = new Time(0, 0);
+    endTime.value = new Time(23, 59);
   } else {
     startTime.value = now();
     endTime.value = now();
   }
 }
 
+async function fetchParticipants(newProjectId:string){
+  const { data: participants} = await useFetch(
+    `/api/projects/${newProjectId}/participants`,
+    {
+      transform: (data) => {
+        if (!data || !Array.isArray(data)) {
+          return [];
+        }
+        return data.map(user => ({
+          label: user.user.name,
+          value: String(user.user.id),
+        }));
+      }
+    }
+  )
+  allUsers.value=participants.value;
+}
 
-watch(selectedProjectId, (newProject) => {
-  // Ezen a ponton szimulálnánk az API hívást,
-  // ami lekéri a projekthez tartozó embereket.
-  console.log(`Fetching users for project: ${newProject}`);
-  // Ha szükséges, frissítené az allUsers ref-et.
+watch(() => props.selectedEvent, (newEvent) => {
+  if (newEvent && newEvent.startDate && newEvent.endDate) {
+    const rawStartDateString = newEvent.startDate as string;
+    const rawEndDateString = newEvent.endDate as string;
+    const startZoned = parseAbsoluteToLocal(rawStartDateString, TIMEZONE);
+    const endZoned = parseAbsoluteToLocal(rawEndDateString, TIMEZONE);
+
+    title.value = newEvent.name || '';
+    description.value = newEvent.description || '';
+    isAllDay.value = newEvent.allDay || false;
+    props.eventType = newEvent.type;
+    operation.value = 'Update';
+    startDate.value = new CalendarDate(startZoned.year, startZoned.month, startZoned.day);
+    startTime.value = new Time(startZoned.hour, startZoned.minute);
+    endDate.value = new CalendarDate(endZoned.year, startZoned.month, startZoned.day);
+    endTime.value = new Time(endZoned.hour, endZoned.minute);
+    selectedProject.value = participateProjects.value.find(project => project.value == newEvent.projectId);
+    invitees.value = newEvent.meetingParticipants.map (participant => ({
+      label: participant.user.name,
+      value: String(participant.user.id)
+    }))
+    taskId.value = newEvent.id;
+
+
+  } else {
+    title.value = '';
+    description.value = '';
+    isAllDay.value = false;
+    startDate.value = today(TIMEZONE);
+    startTime.value = now(TIMEZONE);
+    endDate.value = today(TIMEZONE);
+    endTime.value = now(TIMEZONE);
+  }
+
+}, {
+  immediate: true,
+  deep: true
 });
 
-watch(
-    () => props.isModalOpen,
-    (newValue) => {
+watch(selectedProject, () => {
+  if( props.eventType === 'Meeting'){
+    const newProjectId = selectedProject.value.value
+    fetchParticipants(newProjectId)
+  }
+});
+
+watch(() => props.isModalOpen, (newValue) => {
       if(newValue == false){
         title.value = '';
         description.value = '';
-        startDate.value = today();
-        endDate.value = today();
-        startTime.value = now();
-        endTime.value = now();
+        startDate.value = today(TIMEZONE);
+        endDate.value = today(TIMEZONE);
+        startTime.value = now(TIMEZONE);
+        endTime.value = now(TIMEZONE);
         isAllDay.value = false;
         currentStep.value = 0;
       }
     }
 );
 
-watch(participatedProjects, (newProjects) => {
-  console.log('newProjects', newProjects)
-  if (newProjects && newProjects.length > 0) {
-    selectedProjectId.value = newProjects[0].id;
-    projectsOptions.value = participatedProjects.value
-  }
-}, { immediate: true });
 
 
 </script>
@@ -191,7 +286,7 @@ watch(participatedProjects, (newProjects) => {
   <UModal :open="isModalOpen" :ui="{container: 'items-start sm:items-center', header: 'flex justify-center p-4', body: 'p-4', footer: 'p-4 flex justify-end gap-3'}" isDismissable={false}>
 
     <template #header>
-      <h3 class="text-xl font-bold text-center text-primary-400">Create New {{ eventType }}</h3>
+      <h3 class="text-xl font-bold text-center text-primary-400">{{operation}} {{ eventType }}</h3>
     </template>
 
     <template #body class="space-y-6">
@@ -225,7 +320,7 @@ watch(participatedProjects, (newProjects) => {
               </div>
 
               <UFormField label="Select Project" required>
-                <UInputMenu v-model="selectedProjectId" :options="projectsOptions" value-attribute="id" option-attribute="name" :key="projectsOptions.length"/>
+                <UInputMenu v-model="selectedProject" :items="participateProjects"/>
               </UFormField>
             </div>
           </template>
@@ -254,7 +349,7 @@ watch(participatedProjects, (newProjects) => {
 
                   <div class="flex items-center justify-between">
                     <span class="font-semibold text-gray-100">Project:</span>
-                    <UBadge color="neutral" variant="subtle" size="md">{{ selectedProject }}</UBadge>
+                    <UBadge color="neutral" variant="subtle" size="md">{{ selectedProject.label }}</UBadge>
                   </div>
 
                   <p class="flex items-center justify-between">
@@ -323,24 +418,20 @@ watch(participatedProjects, (newProjects) => {
             <UInputDate v-model="startDate" :popper="{ placement: 'bottom-start' }">
             </UInputDate>
           </UFormField>
-          <UFormField v-if="eventType === 'Task'" label="Start Time" required>
+          <UFormField v-if="eventType === 'Event'" label="Start Time" required>
             <UInputTime :disabled="isAllDay" hideTimeZone :hour-cycle="24" v-model="startTime"/>
           </UFormField>
           <UFormField label="End Date" required>
             <UInputDate v-model="endDate" :popper="{ placement: 'bottom-start' }">
             </UInputDate>
           </UFormField>
-          <UFormField v-if="eventType === 'Task'" label="End Time" required>
+          <UFormField v-if="eventType === 'Event'" label="End Time" required>
             <UInputTime :disabled="isAllDay" hideTimeZone :hour-cycle="24" v-model="endTime"/>
           </UFormField>
         </div>
 
 
-        <UCheckbox v-if="eventType==='Task'" v-model="isAllDay" name="isAllDay" size="lg" label="All Day" @change="isAllDayChanged" />
-
-        <UFormField v-if="eventType === 'Task'" label="Select Project">
-          <UInputMenu v-model="selectedProjectId" :options="projectsOptions" value-attribute="id" option-attribute="name"/>
-        </UFormField>
+        <UCheckbox v-if="eventType==='Event'" v-model="isAllDay" name="isAllDay" size="lg" label="All Day" @change="isAllDayChanged" />
 
       </div>
     </template>
