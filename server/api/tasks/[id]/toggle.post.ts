@@ -42,5 +42,10 @@ export default defineEventHandler(async (event) => {
 
   const updatedTask = await toggleTaskCompletion(taskId, !task.isDone)
 
+  const po = task.project?.owner
+  if (po) {
+    useComms().sendTaskCompletion(event, po, task)
+  }
+
   return updatedTask
 })

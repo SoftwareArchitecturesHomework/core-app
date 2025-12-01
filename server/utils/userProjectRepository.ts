@@ -18,13 +18,20 @@ export async function addUserToProject(projectId: number, userId: number) {
   })
 }
 
-export async function removeUserFromProject(projectId: number, userId: number) {
+export async function removeUserFromProject(
+  projectId: number,
+  userId: number,
+  includeUser = false,
+) {
   return await prisma.userProject.delete({
     where: {
       projectId_userId: {
         projectId,
         userId,
       },
+    },
+    include: {
+      user: includeUser,
     },
   })
 }

@@ -1,5 +1,6 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam, readBody } from 'h3'
+import type { User } from '~~/.generated/prisma/client'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
@@ -81,7 +82,15 @@ export default defineEventHandler(async (event) => {
     }
 
     // Add the participant
-    return await addUserToProject(id, userId)
+    const addedUser = await addUserToProject(id, userId)
+    useComms().sendAddedToProjectNotification(
+      event,
+      user as User,
+      userToAdd,
+      project,
+    )
+
+    return addedUser
   } catch (error: any) {
     if (error.statusCode) {
       throw error

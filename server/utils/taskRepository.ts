@@ -65,11 +65,12 @@ export async function getTaskWithProjectById(id: number) {
     where: { id: id },
     include: {
       project: {
-        select: {
-          ownerId: true,
-          userProjects: {
+        include: {
+          userProjects: true,
+          owner: {
             select: {
-              userId: true,
+              name: true,
+              email: true,
             },
           },
         },
@@ -227,7 +228,7 @@ export async function changeTaskAssignee(
   taskId: number,
   assigneeId: number | null,
 ) {
-  await prisma.task.update({
+  return await prisma.task.update({
     where: { id: taskId },
     data: {
       assigneeId: assigneeId,

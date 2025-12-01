@@ -1,46 +1,112 @@
 import { H3Event } from 'h3'
-import type { Task } from '~~/.generated/prisma/client'
+import type { Project, Task, User as U } from '~~/.generated/prisma/client'
 
 function createComms() {
+  type User = Pick<U, 'email' | 'name'>
   const COMMS_URL = useRuntimeConfig().commsAPIUrl
 
   async function $post<R>(body: any, endpoint: string, event: H3Event) {
-    const jwt = await useJwt(event)
-    return $fetch<R>(`${COMMS_URL}/api/${endpoint}`, {
+    return $fetch<R>(`${COMMS_URL}/api/notifications/${endpoint}`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${jwt}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${await useJwt(event)}`,
         Accept: 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
       },
       body,
     })
   }
 
-  function sendProjectJoinNotification(
+  function remapTask(task: Task) {
+    return {
+      id: task.id,
+      name: task.name,
+      description: task.description,
+      start: task.startDate?.getTime(),
+      end: task.endDate?.getTime(),
+    }
+  }
+
+  function sendAddedToProjectNotification(
     event: H3Event,
-    to: string[],
-    projectName: string,
+    manager: User,
+    member: User,
+    project: Project,
   ) {
     return $post<{ success: boolean }>(
-      { to, projectName },
-      'email/project-join',
+      { manager, member, project },
+      'user-added',
       event,
     )
   }
 
-  function sendTaskAssignment(event: H3Event, to: string[], taskDetails: Task) {
+  function sendUserRemovedFromProjectNotification(
+    event: H3Event,
+    manager: User,
+    member: User,
+    project: Project,
+  ) {
     return $post<{ success: boolean }>(
-      { to, taskDetails },
-      'email/task-assignment',
+      { manager, member, project },
+      'user-removed',
+      event,
+    )
+  }
+
+  function sendProjectCompletedNotification(
+    event: H3Event,
+    manager: User,
+    members: User[],
+    project: Project,
+  ) {
+    return $post<{ success: boolean }>(
+      { manager, members, project },
+      'project-completed',
+      event,
+    )
+  }
+
+  function sendTaskAssignment(
+    event: H3Event,
+    assigner: User,
+    assignee: User,
+    task: Task,
+  ) {
+    return $post<{ success: boolean }>(
+      { assigner, assignee, task: remapTask(task) },
+      'task-assigned',
+      event,
+    )
+  }
+
+  function sendTaskCompletion(event: H3Event, assignee: User, task: Task) {
+    return $post<{ success: boolean }>(
+      { assignee, task: remapTask(task) },
+      'task-completed',
+      event,
+    )
+  }
+
+  function sendVacationRequest(
+    event: H3Event,
+    assigner: User,
+    assignee: User,
+    task: Task,
+  ) {
+    return $post<{ success: boolean }>(
+      { assigner, assignee, task: remapTask(task) },
+      'vacation-request',
       event,
     )
   }
 
   return {
-    sendProjectJoinNotification,
+    sendAddedToProjectNotification,
+    sendUserRemovedFromProjectNotification,
+    sendProjectCompletedNotification,
     sendTaskAssignment,
+    sendTaskCompletion,
+    sendVacationRequest,
   }
 }
 

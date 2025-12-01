@@ -1,4 +1,5 @@
 import { getServerSession } from '#auth'
+import type { User } from '~~/.generated/prisma/client'
 
 export default defineEventHandler(async (event) => {
   // Authenticate user
@@ -82,6 +83,13 @@ export default defineEventHandler(async (event) => {
     const updatedTask = await changeTaskAssignee(
       Number(taskId),
       assigneeId !== null ? Number(assigneeId) : null,
+    )
+
+    useComms().sendTaskAssignment(
+      event,
+      user as User,
+      updatedTask.assignee as User,
+      updatedTask,
     )
 
     return updatedTask

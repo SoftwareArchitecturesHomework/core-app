@@ -1,5 +1,6 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam } from 'h3'
+import type { User } from '~~/.generated/prisma/client'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
@@ -76,7 +77,13 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    await removeUserFromProject(id, userId)
+    const exmember = (await removeUserFromProject(id, userId, true)).user
+    useComms().sendUserRemovedFromProjectNotification(
+      event,
+      user as User,
+      exmember,
+      project,
+    )
 
     return {
       success: true,

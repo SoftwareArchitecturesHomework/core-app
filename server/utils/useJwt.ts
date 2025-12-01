@@ -1,7 +1,7 @@
 import { getServerSession } from '#auth'
 import { useRuntimeConfig } from '#imports'
 import type { H3Event } from 'h3'
-import { getCookie, setCookie } from 'h3'
+import { getCookie } from 'h3'
 import { SignJWT, jwtVerify } from 'jose'
 import { createPrivateKey, type KeyObject } from 'node:crypto'
 
@@ -59,13 +59,6 @@ export async function useJwt(event: H3Event): Promise<string> {
     .setIssuedAt(now)
     .setExpirationTime(now + EXP_SECONDS)
     .sign(key)
-
-  setCookie(event, COOKIE_NAME, jwt, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: EXP_SECONDS,
-  })
 
   return jwt
 }

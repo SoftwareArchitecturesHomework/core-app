@@ -1,7 +1,8 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam, readBody } from 'h3'
+import type { User } from '~~/.generated/prisma/client'
 
-const VALID_TYPES = ['MEETING', 'TASK']
+const VALID_TYPES = ['MEETING', 'TASK'] as const
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
@@ -78,22 +79,32 @@ export default defineEventHandler(async (event) => {
     }
 
     // If assigneeId is provided, verify they are a participant
+    let assignee: Pick<User, 'email' | 'name'> | null = null
     if (assigneeId) {
-      const assignee = await prisma.userProject.findUnique({
+      const relation = await prisma.userProject.findUnique({
         where: {
           projectId_userId: {
             projectId: id,
             userId: assigneeId,
           },
         },
+        include: {
+          user: {
+            select: {
+              email: true,
+              name: true,
+            },
+          },
+        },
       })
 
-      if (!assignee) {
+      if (!relation) {
         throw createError({
           statusCode: 400,
           statusMessage: 'Assignee must be a participant in the project',
         })
       }
+      assignee = relation.user
     }
 
     // Create the task
@@ -105,6 +116,10 @@ export default defineEventHandler(async (event) => {
       user.id,
       assigneeId || null,
     )
+
+    if (assignee) {
+      useComms().sendTaskAssignment(event, user as User, assignee, task)
+    }
 
     return task
   } catch (error: any) {
