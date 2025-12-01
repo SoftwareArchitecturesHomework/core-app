@@ -161,8 +161,6 @@ Relációs adatbázist választottunk az alábbi okok miatt:
 
 A munkamenet kezeléshez JWT tokeneket használunk:
 
-**Stateless**: A szerver nem tárol session információkat, ami egyszerűsíti a horizontális skálázást.
-
 **Mikroszerviz kompatibilitás**: A tokenek könnyen validálhatók a különböző szolgáltatásokban.
 
 **CredentialsProvider támogatás**: Lehetővé teszi mind az OAuth, mind az email-jelszó alapú bejelentkezést.
@@ -486,8 +484,6 @@ A jelentések tartalmaznak szöveges adatokat, diagramokat, illetve táblázatok
 
 - `GET reports/manager/{manager_id}/pdf` - Adott id-val rendelkező menedzser riportjának a generálása pdf-ben.
 - `GET reports/manager/{manager_id}/html` - Adott id-val rendelkező menedzser riportjának a generálása html-ben.
-
-
 
 ### Mikroszolgáltatás kommunikáció
 
