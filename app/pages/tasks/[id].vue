@@ -122,6 +122,19 @@ async function removeAssignee() {
     console.error('Failed to remove assignee:', error)
   }
 }
+
+async function removeTimeEntry(id: number) {
+  if (!task.value) return
+
+  try {
+    await $fetch(`/api/time-entries/${id}`, {
+      method: 'DELETE',
+    })
+    await refresh()
+  } catch (error) {
+    console.error('Failed to remove time entry:', error)
+  }
+}
 </script>
 
 <template>
@@ -253,9 +266,22 @@ async function removeAssignee() {
                       >
                     </div>
                   </div>
-                  <UBadge color="primary" variant="soft"
-                    >{{ entry.hours }}h</UBadge
-                  >
+                  <div class="flex gap-4">
+                    <UBadge color="primary" variant="soft"
+                      >{{ entry.hours }}h</UBadge
+                    >
+                    <UButton
+                      v-if="isAssignee && entry.userId === user?.id"
+                      color="error"
+                      variant="ghost"
+                      size="xs"
+                      circular
+                      @click="removeTimeEntry(entry.id)"
+                    >
+                      <UIcon name="i-heroicons-trash" class="w-4 h-4" />
+                    </UButton>
+                    <div v-else class="h-8 w-8"></div>
+                  </div>
                 </div>
               </div>
             </div>

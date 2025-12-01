@@ -32,3 +32,23 @@ export async function createTimeEntry(
     },
   })
 }
+
+export async function getTimeEntryById(id: number) {
+  return await prisma.timeEntry.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      userId: true,
+      taskId: true,
+      date: true,
+      hours: true,
+      note: true,
+    },
+  })
+}
+
+export async function deleteTimeEntry(id: number) {
+  return await prisma.timeEntry.delete({
+    where: { id },
+  })
+}
