@@ -3,7 +3,7 @@ export function useUser() {
   const user = computed(() => session.value?.user)
   const userId = computed(() => user.value?.id)
   const userRole = computed(() => user.value?.role)
-  const canCreateProject = computed(() => {
+  const canManage = computed(() => {
     return userRole.value === 'MANAGER'
   })
 
@@ -11,6 +11,6 @@ export function useUser() {
     user,
     userId,
     userRole,
-    canCreateProject,
+    canManage,
   }
 }

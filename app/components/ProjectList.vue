@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const emit = defineEmits<{ created: [] }>()
 
-const { userId, canCreateProject } = useUser()
+const { userId, canManage } = useUser()
 const { data: ownedProjects, refresh: refreshOwned } = await useFetch(
   '/api/projects',
   { query: computed(() => ({ ownerId: userId.value })) },
@@ -14,7 +14,7 @@ async function onProjectCreated() {
 </script>
 
 <template>
-  <div v-if="canCreateProject" class="mb-12">
+  <div v-if="canManage" class="mb-12">
     <div class="flex items-center justify-between gap-4 mb-4">
       <div class="flex items-center gap-2">
         <UIcon name="i-heroicons-briefcase" class="w-6 h-6 text-primary" />
