@@ -404,8 +404,8 @@ A frontend Vue.js komponensekből áll, Nuxt.js keretrendszerben (`/app/`).
 - `calendar/` - naptár nézet
   ![calendar](image-6.png)
   - új esemény létrehozása
-  ![create_new_event](image-7.png)
-  - új meeting létrehozása 
+    ![create_new_event](image-7.png)
+  - új meeting létrehozása
     ![create_new_meeting](image-8.png)
     ![create_new_meeting](image-9.png)
     ![create_new_meeting](image-10.png)
@@ -503,4 +503,4 @@ A Core Application REST API hívásokkal kommunikál a microservice-kkel, de gRP
 
 # Telepítési leírás
 
-Docker compose
+Az alkalmazás docker compose segítségével futtatható majd a 3000-es porton érhető el
