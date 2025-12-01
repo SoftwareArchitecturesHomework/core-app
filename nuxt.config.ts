@@ -5,11 +5,14 @@ export default defineNuxtConfig({
   css: ['./app/assets/css/main.css'],
   modules: ['@nuxt/ui', '@sidebase/nuxt-auth', '@vueuse/nuxt'],
   runtimeConfig: {
-    googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-    googleClientSecret: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_SECRET || '',
-    authSecret: process.env.NUXT_PUBLIC_AUTH_SECRET || '',
-    authOrigin: process.env.NUXT_PUBLIC_AUTH_ORIGIN || '',
-    authUrl: process.env.NUXT_PUBLIC_AUTH_URL || '',
+    primaryLoginProvider: 'google',
+    googleClientId: '',
+    googleClientSecret: '',
+    discordClientId: '',
+    discordClientSecret: '',
+    authSecret: '',
+    authOrigin: '',
+    authUrl: '',
     commsAPIUrl: '',
 
     jwtPrivateKey: '',
@@ -17,20 +20,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'WorkPlanner',
-      link: [
-        {
-          rel: 'icon',
-          type: 'image/png',
-          href: '/favicon-light.png',
-          media: '(prefers-color-scheme: light)',
-        },
-        {
-          rel: 'icon',
-          type: 'image/png',
-          href: '/favicon-dark.png',
-          media: '(prefers-color-scheme: dark)',
-        },
-      ],
+      link: [{ rel: 'icon', type: 'image/png', href: '/favicon.png' }],
     },
   },
 
