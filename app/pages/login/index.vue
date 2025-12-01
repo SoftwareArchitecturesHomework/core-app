@@ -39,9 +39,11 @@ async function handleCredentialsLogin() {
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-linear-to-br from-primary-50 to-primary-100 dark:from-gray-900 dark:to-gray-800"
+    class="min-h-screen flex items-center justify-center bg-radial-[at_50%_50%] from-primary-50 dark:from-slate-800 to-primary-default"
   >
-    <UCard class="w-full max-w-md shadow-xl">
+    <UCard
+      class="w-full max-md:bg-transparent max-md:shadow-none max-md:ring-0 md:max-w-md shadow-xl"
+    >
       <template #header>
         <div class="text-center space-y-2">
           <h1 class="text-3xl font-bold text-primary-600 dark:text-primary-400">
@@ -50,7 +52,7 @@ async function handleCredentialsLogin() {
         </div>
       </template>
 
-      <div class="space-y-6 pb-6">
+      <div class="flex flex-col gap-6">
         <div class="text-center space-y-2">
           <Logo class="size-20 mx-auto mb-4" />
           <p class="text-gray-600 dark:text-gray-400">
@@ -62,7 +64,7 @@ async function handleCredentialsLogin() {
           @submit.prevent="handleCredentialsLogin"
           class="flex flex-col gap-2"
         >
-          <UFormGroup label="Email" name="email" required class="w-full">
+          <UFormField label="Email" name="email" required class="w-full">
             <UInput
               v-model="email"
               type="email"
@@ -72,9 +74,9 @@ async function handleCredentialsLogin() {
               required
               class="w-full"
             />
-          </UFormGroup>
+          </UFormField>
 
-          <UFormGroup label="Password" name="password" required>
+          <UFormField label="Password" name="password" required>
             <UInput
               v-model="password"
               type="password"
@@ -84,7 +86,7 @@ async function handleCredentialsLogin() {
               required
               class="w-full"
             />
-          </UFormGroup>
+          </UFormField>
 
           <UAlert
             v-if="error"

@@ -73,9 +73,8 @@ const userMenuItems = [
           :popper="{ placement: 'bottom-end' }"
         >
           <UAvatar
-            v-if="user?.image"
-            :src="user.image"
-            :alt="user.name || 'User avatar'"
+            :src="user?.image || undefined"
+            :alt="user?.name || 'User avatar'"
             size="lg"
             class="cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all"
           />
