@@ -1,6 +1,4 @@
 import { getServerSession } from '#auth'
-import { getTaskWithProjectById } from '~~/server/repositories/TaskRepository'
-import { createTimeEntry } from '~~/server/repositories/timeEntryRepository'
 
 export default defineEventHandler(async (event) => {
   // Authenticate user

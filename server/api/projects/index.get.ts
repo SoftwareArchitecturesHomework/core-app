@@ -1,9 +1,5 @@
-import { defineEventHandler, getQuery } from 'h3'
 import { getServerSession } from '#auth'
-import {
-  getProjectByOwnerId,
-  getProjectByParticipantId,
-} from '~~/server/repositories/projectRepository'
+import { defineEventHandler, getQuery } from 'h3'
 
 export default defineEventHandler(async (event) => {
   const { ownerId, participantId } = getQuery(event)

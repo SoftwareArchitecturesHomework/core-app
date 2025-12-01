@@ -1,7 +1,5 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam, readBody } from 'h3'
-import { getProjectDetailsById } from '~~/server/repositories/projectRepository'
-import { createTaskForProject } from '~~/server/repositories/TaskRepository'
 
 const VALID_TYPES = ['MEETING', 'TASK']
 

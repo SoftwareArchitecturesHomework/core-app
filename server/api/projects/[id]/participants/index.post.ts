@@ -1,8 +1,5 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam, readBody } from 'h3'
-import { getProjectDetailsById } from '~~/server/repositories/projectRepository'
-import { addUserToProject } from '~~/server/repositories/userProjectRepository'
-import { getUserById } from '~~/server/repositories/userRepository'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)

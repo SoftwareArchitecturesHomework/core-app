@@ -1,5 +1,4 @@
 import { getServerSession } from '#auth'
-import { getTaskDetailsById } from '~~/server/repositories/TaskRepository'
 
 export default defineEventHandler(async (event) => {
   // Authenticate user

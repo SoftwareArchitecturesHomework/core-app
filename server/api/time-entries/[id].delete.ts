@@ -1,8 +1,4 @@
 import { getServerSession } from '#auth'
-import {
-  getTimeEntryById,
-  deleteTimeEntry,
-} from '~~/server/repositories/timeEntryRepository'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
