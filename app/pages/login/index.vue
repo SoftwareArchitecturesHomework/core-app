@@ -27,7 +27,6 @@ async function handleCredentialsLogin() {
     password: password.value,
     redirect: false,
   })
-  console.log(result)
 
   if (result?.error) {
     error.value = 'Invalid email or password'
