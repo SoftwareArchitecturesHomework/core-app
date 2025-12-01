@@ -1,5 +1,6 @@
 import { getServerSession } from '#auth'
 import { defineEventHandler, getRouterParam } from 'h3'
+import { getProjectDetailsById } from '~~/server/repositories/projectRepository'
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event)
@@ -31,36 +32,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const project = await prisma.project.findUnique({
-      where: {
-        id: projectId,
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            role: true,
-          },
-        },
-        userProjects: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-                role: true,
-              },
-            },
-          },
-        },
-        tasks: true,
-      },
-    })
+    const project = await getProjectDetailsById(projectId)
 
     if (!project) {
       throw createError({

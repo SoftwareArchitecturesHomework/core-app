@@ -1,4 +1,8 @@
 import { getServerSession } from '#auth'
+import {
+  changeTaskAssignee,
+  getTaskWithProjectById,
+} from '~~/server/repositories/TaskRepository'
 
 export default defineEventHandler(async (event) => {
   // Authenticate user
@@ -35,22 +39,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Fetch task with project info
-    const task = await prisma.task.findUnique({
-      where: { id: Number(taskId) },
-      include: {
-        project: {
-          select: {
-            id: true,
-            ownerId: true,
-            userProjects: {
-              select: {
-                userId: true,
-              },
-            },
-          },
-        },
-      },
-    })
+    const task = await getTaskWithProjectById(Number(taskId))
 
     if (!task) {
       throw createError({
@@ -94,23 +83,10 @@ export default defineEventHandler(async (event) => {
     }
 
     // Update task assignee
-    const updatedTask = await prisma.task.update({
-      where: { id: Number(taskId) },
-      data: {
-        assigneeId: assigneeId !== null ? Number(assigneeId) : null,
-      },
-      include: {
-        assignee: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            role: true,
-          },
-        },
-      },
-    })
+    const updatedTask = await changeTaskAssignee(
+      Number(taskId),
+      assigneeId !== null ? Number(assigneeId) : null,
+    )
 
     return updatedTask
   } catch (error: any) {
