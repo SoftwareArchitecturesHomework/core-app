@@ -140,12 +140,6 @@ export default NuxtAuthHandler({
             providerAccountId: account.providerAccountId,
           },
         })
-        console.log(
-          '🙀 SIGN IN EVENT \n\n\n\n ',
-          account,
-          profile,
-          existingAccount,
-        )
 
         if (!existingAccount) {
           await prisma.account.create({
