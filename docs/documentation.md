@@ -47,13 +47,14 @@ A felettesek megnézhetik a beosztottjaik jóváhagyásra váró szabadnapjait, 
   - Szabadságok figyelembevétele a kötelező órákból
   - Státusz jelzés (elegendő/hiányos/nincs bejegyzés)
 - **Naptár nézet**
-  - TODO: Fanni
+  - Új meeting hozzáadása és módosítása
+  - Új szabadság hozzáadása és módosítása
+  - Új esemény hozzáadása és módosítása
 - **Felhasználói rendszer**
   - Bejelentkezés Google OAuth-al
   - Bejelentkezés email és jelszóval
   - Szerepkör alapú jogosultságkezelés (Menedzser, Alkalmazott)
 - **Értesítések**
-  TODO: Geri
   - Email értesítések szabadság igénylésekről
   - Discord értesítések (opcionális)
 
@@ -401,6 +402,17 @@ A frontend Vue.js komponensekből áll, Nuxt.js keretrendszerben (`/app/`).
 - `approvals/` - Jóváhagyások
   ![approvals](image-4.png)
 - `calendar/` - naptár nézet
+  ![calendar](image-6.png)
+  - új esemény létrehozása
+  ![create_new_event](image-7.png)
+  - új meeting létrehozása 
+    ![create_new_meeting](image-8.png)
+    ![create_new_meeting](image-9.png)
+    ![create_new_meeting](image-10.png)
+  - új szabadság létrehozása
+    ![create_vacation](image-11.png)
+  - a módosító felületeken ugyanezek jönnek be, az adatok betöltésével:
+    ![update_meeting](image-12.png)
 
 **Composable-ök** (`/app/composables/`):
 
