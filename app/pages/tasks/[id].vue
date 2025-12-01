@@ -36,14 +36,10 @@ function getTaskTypeColor(
   | 'warning'
   | 'neutral' {
   switch (type) {
-    case 'VACATION':
-      return 'warning'
     case 'MEETING':
       return 'secondary'
     case 'TASK':
       return 'primary'
-    case 'INDIVIDUALTASK':
-      return 'success'
     default:
       return 'neutral'
   }
@@ -51,14 +47,10 @@ function getTaskTypeColor(
 
 function getTaskTypeLabel(type: TaskType) {
   switch (type) {
-    case 'VACATION':
-      return 'Vacation'
     case 'MEETING':
       return 'Meeting'
     case 'TASK':
       return 'Task'
-    case 'INDIVIDUALTASK':
-      return 'Individual Task'
     default:
       return type
   }
