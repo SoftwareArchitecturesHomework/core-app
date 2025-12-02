@@ -31,7 +31,7 @@
 const props = defineProps({
   title: { type: String, required: true },
   icon: { type: String, required: true },
-  dataUrl: { type: String, required: true }, // The URL (blob://) generated from Base64
+  dataUrl: { type: Blob, required: true }, // The URL (blob://) generated from Base64
   fileName: { type: String, required: true },
   mimeType: { type: String, required: true },
   canDownload: { type: Boolean, default: true },
@@ -40,17 +40,23 @@ const props = defineProps({
 
 // --- Download Logic ---
 const downloadFile = () => {
-  const link = document.createElement('a')
-  link.href = props.dataUrl
-  link.download = props.fileName
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  const url = URL.createObjectURL(props.dataUrl as Blob)
+  
+  const link = document.createElement('a')
+  link.href = url
+  link.download = props.fileName + (props.mimeType === 'application/pdf' ? '.pdf' : '.html')
+  
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  
+  URL.revokeObjectURL(url)
 }
 
 // --- Open Logic (New Tab) ---
 const openFile = () => {
   // Open the Blob URL directly in a new browser tab
-  window.open(props.dataUrl, '_blank')
+  const url = URL.createObjectURL(props.dataUrl as Blob)
+  window.open(url, '_blank')
 }
 </script>

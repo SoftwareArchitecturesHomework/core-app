@@ -8,6 +8,7 @@ useHead({
 
 const { userId } = useUser()
 const report = ref(null as any)
+const report_html = ref(null as any)
 const loading = ref(true)
 const error = ref(null as string | null)
 
@@ -22,7 +23,8 @@ async function fetchReportData() {
   }
 
   try {
-    report.value = (await restClient.getManagerPDF(managerId)) as any
+    report.value = (await restClient.getManagerPDF(managerId)) as Blob
+    report_html.value = (await restClient.getManagerHTML(managerId)) as Blob
   } catch (e: any) {
     error.value = `Failed to fetch report: ${e.message}`
   } finally {
@@ -88,6 +90,15 @@ onMounted(() => {
         :data-url="report"
         file-name="report"
         mime-type="application/pdf"
+        :can-download="true"
+        :can-open="true"
+      />
+      <ReportFileItem
+        title="HTML Report (Downloadable)"
+        icon="i-heroicons-document-arrow-down"
+        :data-url="report_html"
+        file-name="report"
+        mime-type="application/html"
         :can-download="true"
         :can-open="true"
       />

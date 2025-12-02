@@ -1,6 +1,6 @@
 // NOTE: This client uses standard JavaScript Error objects instead of @bufbuild/connect types.
 
-const reportServiceUrl = 'http://localhost:8080'
+const reportServiceUrl = 'http://localhost:8000'
 const reportServiceApiKey =
   'eb791ef310f839e817cc0aac46f5883adea878e57f60472fba9d670ef74b2187'
 
