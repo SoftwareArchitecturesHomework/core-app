@@ -58,17 +58,13 @@ async function cleanup() {
     },
   })
 
-  console.info(
-    `Deleted ${deletedUsers.count} mock users and all seed data.`,
-  )
+  console.info(`Deleted ${deletedUsers.count} mock users and all seed data.`)
 }
 
 async function seed() {
-  const today = new Date()
-  const futureDate = new Date()
-  futureDate.setMonth(today.getMonth() + 3)
+  const today = new Date('2025-12-03')
+  const futureDate = new Date('2026-03-03')
   const hashedPassword = await bcrypt.hash('defaultPassword123', 10)
-
 
   console.info('Starting database seed...')
 
@@ -100,7 +96,7 @@ async function seed() {
         email: 'admin@company.com',
         name: 'Alice Admin',
         role: Role.MANAGER,
-        password: hashedPassword
+        password: hashedPassword,
       },
     })
   }
@@ -111,7 +107,7 @@ async function seed() {
       name: 'Bob Manager',
       role: Role.MANAGER,
       managerId: mainUser.id,
-      password: hashedPassword
+      password: hashedPassword,
     },
   })
 
@@ -121,7 +117,7 @@ async function seed() {
       name: 'Charlie Employee',
       role: Role.EMPLOYEE,
       managerId: mainUser.id,
-      password: hashedPassword
+      password: hashedPassword,
     },
   })
 
@@ -131,7 +127,7 @@ async function seed() {
       name: 'Diana Developer',
       role: Role.EMPLOYEE,
       managerId: mainUser.id,
-      password: hashedPassword
+      password: hashedPassword,
     },
   })
 
@@ -141,7 +137,7 @@ async function seed() {
       name: 'Ethan Engineer',
       role: Role.EMPLOYEE,
       managerId: mainUser.id,
-      password: hashedPassword
+      password: hashedPassword,
     },
   })
 
@@ -151,14 +147,44 @@ async function seed() {
       name: 'Fiona Frontend',
       role: Role.EMPLOYEE,
       managerId: managerUser.id, // Reports to Bob
-      password: hashedPassword
+      password: hashedPassword,
     },
   })
 
+  const employee5 = await prisma.user.create({
+    data: {
+      email: 'george@company.com',
+      name: 'George Garcia',
+      role: Role.EMPLOYEE,
+      managerId: mainUser.id,
+      password: hashedPassword,
+    },
+  })
+
+  const employee6 = await prisma.user.create({
+    data: {
+      email: 'hannah@company.com',
+      name: 'Hannah Hill',
+      role: Role.EMPLOYEE,
+      managerId: mainUser.id,
+      password: hashedPassword,
+    },
+  })
+
+  const allEmployees = [
+    employeeUser,
+    employee2,
+    employee3,
+    employee4,
+    employee5,
+    employee6,
+  ]
+
+  // Project A: Ongoing project (started Sep 2025, planned end Mar 2026)
   const projectA = await prisma.project.create({
     data: {
       name: 'Nuxt 3 Dashboard App',
-      startDate: today,
+      startDate: new Date('2025-09-01'),
       plannedEndDate: futureDate,
       ownerId: mainUser.id,
       userProjects: {
@@ -174,59 +200,91 @@ async function seed() {
     },
   })
 
+  // Project B: Completed early (started Sep, planned Dec 15, ended Nov 20)
   const projectB = await prisma.project.create({
     data: {
-      name: 'Legacy API Migration (Completed)',
-      startDate: today,
-      endDate: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate() + 45,
-      ),
-      plannedEndDate: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate() + 60,
-      ),
+      name: 'Legacy API Migration',
+      startDate: new Date('2025-09-10'),
+      endDate: new Date('2025-11-20'),
+      plannedEndDate: new Date('2025-12-15'),
       ownerId: managerUser.id,
       userProjects: {
         create: [
           { userId: employeeUser.id },
           { userId: employee2.id },
           { userId: employee3.id },
+          { userId: employee5.id },
         ],
       },
     },
   })
 
-  const mockProjectIds = [projectA.id, projectB.id]
+  // Project C: Completed late (started Oct, planned Nov 30, ended Dec 2)
+  const projectC = await prisma.project.create({
+    data: {
+      name: 'Mobile App Backend',
+      startDate: new Date('2025-10-01'),
+      endDate: new Date('2025-12-02'),
+      plannedEndDate: new Date('2025-11-30'),
+      ownerId: mainUser.id,
+      userProjects: {
+        create: [
+          { userId: employee4.id },
+          { userId: employee5.id },
+          { userId: employee6.id },
+          { userId: managerUser.id },
+        ],
+      },
+    },
+  })
 
-  const task1 = await prisma.task.create({
+  // Project D: Ongoing (started Nov 2025)
+  const projectD = await prisma.project.create({
+    data: {
+      name: 'E-commerce Platform Redesign',
+      startDate: new Date('2025-11-01'),
+      plannedEndDate: new Date('2026-02-28'),
+      ownerId: managerUser.id,
+      userProjects: {
+        create: [
+          { userId: employeeUser.id },
+          { userId: employee2.id },
+          { userId: employee4.id },
+          { userId: employee6.id },
+        ],
+      },
+    },
+  })
+
+  const mockProjectIds = [projectA.id, projectB.id, projectC.id, projectD.id]
+
+  // ===== PROJECT A TASKS =====
+  const taskA1 = await prisma.task.create({
     data: {
       type: TaskType.TASK,
-      creatorId: managerUser.id,
+      creatorId: mainUser.id,
       assigneeId: employeeUser.id,
       name: 'Implement User Authentication',
       description: 'Set up OAuth2 and JWT authentication',
       isDone: true,
       projectId: projectA.id,
-      dueDate: new Date(today.getFullYear(), today.getMonth() - 2, 15),
+      dueDate: new Date('2025-09-30'),
     },
   })
 
-  const task2 = await prisma.task.create({
+  const taskA2 = await prisma.task.create({
     data: {
       type: TaskType.MEETING,
       creatorId: mainUser.id,
       assigneeId: managerUser.id,
       name: 'Weekly Sync Up',
-      description: 'Review progress and blockages.',
+      description: 'Review progress and blockages',
       isDone: false,
       projectId: projectA.id,
     },
   })
 
-  const task3 = await prisma.task.create({
+  const taskA3 = await prisma.task.create({
     data: {
       type: TaskType.TASK,
       creatorId: mainUser.id,
@@ -235,11 +293,11 @@ async function seed() {
       description: 'Create Prisma schema for core entities',
       isDone: true,
       projectId: projectA.id,
-      dueDate: new Date(today.getFullYear(), today.getMonth() - 3, 20),
+      dueDate: new Date('2025-09-20'),
     },
   })
 
-  const task4 = await prisma.task.create({
+  const taskA4 = await prisma.task.create({
     data: {
       type: TaskType.TASK,
       creatorId: managerUser.id,
@@ -248,37 +306,24 @@ async function seed() {
       description: 'Create responsive dashboard with Nuxt UI components',
       isDone: false,
       projectId: projectA.id,
-      dueDate: new Date(today.getFullYear(), today.getMonth() - 1, today.getDate() + 7),
+      dueDate: new Date('2025-12-15'),
     },
   })
 
-  const task5 = await prisma.task.create({
+  const taskA5 = await prisma.task.create({
     data: {
       type: TaskType.TASK,
       creatorId: managerUser.id,
       assigneeId: employee3.id,
       name: 'API Integration',
       description: 'Connect frontend to backend services',
-      isDone: false,
-      projectId: projectA.id,
-      dueDate: new Date(today.getFullYear(), today.getMonth() - 1, today.getDate() + 14),
-    },
-  })
-
-  const task6 = await prisma.task.create({
-    data: {
-      type: TaskType.TASK,
-      creatorId: mainUser.id,
-      assigneeId: employee2.id,
-      name: 'Database Migration Scripts',
-      description: 'Write migration scripts for legacy data',
       isDone: true,
-      projectId: projectB.id,
-      dueDate: new Date(today.getFullYear(), today.getMonth() - 3, 10),
+      projectId: projectA.id,
+      dueDate: new Date('2025-10-31'),
     },
   })
 
-  const task7 = await prisma.task.create({
+  const taskA6 = await prisma.task.create({
     data: {
       type: TaskType.TASK,
       creatorId: managerUser.id,
@@ -287,297 +332,778 @@ async function seed() {
       description: 'Add test coverage for authentication module',
       isDone: true,
       projectId: projectA.id,
-      dueDate: new Date(today.getFullYear(), today.getMonth() - 2, 25),
+      dueDate: new Date('2025-10-15'),
     },
   })
 
-  const task8 = await prisma.task.create({
+  const taskA7 = await prisma.task.create({
     data: {
       type: TaskType.TASK,
       creatorId: managerUser.id,
       assigneeId: employee3.id,
       name: 'Setup CI/CD Pipeline',
       description: 'Configure GitHub Actions for automated deployment',
+      isDone: true,
+      projectId: projectA.id,
+      dueDate: new Date('2025-11-10'),
+    },
+  })
+
+  const taskA8 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: mainUser.id,
+      assigneeId: employee2.id,
+      name: 'Performance Optimization',
+      description: 'Optimize database queries and add caching',
       isDone: false,
       projectId: projectA.id,
-      dueDate: new Date(today.getFullYear(), today.getMonth() - 1, today.getDate() + 5),
+      dueDate: new Date('2025-12-20'),
+    },
+  })
+
+  // ===== PROJECT B TASKS =====
+  const taskB1 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employee2.id,
+      name: 'Database Migration Scripts',
+      description: 'Write migration scripts for legacy data',
+      isDone: true,
+      projectId: projectB.id,
+      dueDate: new Date('2025-10-01'),
+    },
+  })
+
+  const taskB2 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employeeUser.id,
+      name: 'API Endpoint Migration',
+      description: 'Migrate REST endpoints to new architecture',
+      isDone: true,
+      projectId: projectB.id,
+      dueDate: new Date('2025-10-15'),
+    },
+  })
+
+  const taskB3 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employee3.id,
+      name: 'Data Validation Layer',
+      description: 'Implement input validation for migrated APIs',
+      isDone: true,
+      projectId: projectB.id,
+      dueDate: new Date('2025-10-25'),
+    },
+  })
+
+  const taskB4 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employee5.id,
+      name: 'Integration Testing',
+      description: 'Create comprehensive integration test suite',
+      isDone: true,
+      projectId: projectB.id,
+      dueDate: new Date('2025-11-05'),
+    },
+  })
+
+  const taskB5 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employee2.id,
+      name: 'Documentation Update',
+      description: 'Update API documentation for new endpoints',
+      isDone: true,
+      projectId: projectB.id,
+      dueDate: new Date('2025-11-10'),
+    },
+  })
+
+  const taskB6 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employeeUser.id,
+      name: 'Performance Benchmarking',
+      description: 'Compare old vs new API performance',
+      isDone: true,
+      projectId: projectB.id,
+      dueDate: new Date('2025-11-15'),
+    },
+  })
+
+  const taskB7 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employee3.id,
+      name: 'Production Deployment',
+      description: 'Deploy migrated APIs to production',
+      isDone: true,
+      projectId: projectB.id,
+      dueDate: new Date('2025-11-20'),
+    },
+  })
+
+  // ===== PROJECT C TASKS =====
+  const taskC1 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: mainUser.id,
+      assigneeId: employee4.id,
+      name: 'Mobile API Design',
+      description: 'Design RESTful API for mobile app',
+      isDone: true,
+      projectId: projectC.id,
+      dueDate: new Date('2025-10-15'),
+    },
+  })
+
+  const taskC2 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: mainUser.id,
+      assigneeId: employee5.id,
+      name: 'Authentication Service',
+      description: 'Implement OAuth2 for mobile clients',
+      isDone: true,
+      projectId: projectC.id,
+      dueDate: new Date('2025-10-25'),
+    },
+  })
+
+  const taskC3 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: mainUser.id,
+      assigneeId: employee6.id,
+      name: 'Push Notification System',
+      description: 'Set up Firebase Cloud Messaging',
+      isDone: true,
+      projectId: projectC.id,
+      dueDate: new Date('2025-11-05'),
+    },
+  })
+
+  const taskC4 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: mainUser.id,
+      assigneeId: employee4.id,
+      name: 'File Upload Service',
+      description: 'Implement image and file upload endpoints',
+      isDone: true,
+      projectId: projectC.id,
+      dueDate: new Date('2025-11-15'),
+    },
+  })
+
+  const taskC5 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: mainUser.id,
+      assigneeId: employee5.id,
+      name: 'Real-time Sync',
+      description: 'Implement WebSocket for real-time data sync',
+      isDone: true,
+      projectId: projectC.id,
+      dueDate: new Date('2025-11-22'),
+    },
+  })
+
+  const taskC6 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: mainUser.id,
+      assigneeId: employee6.id,
+      name: 'API Rate Limiting',
+      description: 'Add rate limiting and throttling',
+      isDone: true,
+      projectId: projectC.id,
+      dueDate: new Date('2025-11-28'),
+    },
+  })
+
+  const taskC7 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: mainUser.id,
+      assigneeId: managerUser.id,
+      name: 'Load Testing',
+      description: 'Perform load testing and optimization',
+      isDone: true,
+      projectId: projectC.id,
+      dueDate: new Date('2025-12-02'),
+    },
+  })
+
+  // ===== PROJECT D TASKS =====
+  const taskD1 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employeeUser.id,
+      name: 'E-commerce Architecture Planning',
+      description: 'Design microservices architecture',
+      isDone: true,
+      projectId: projectD.id,
+      dueDate: new Date('2025-11-15'),
+    },
+  })
+
+  const taskD2 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employee2.id,
+      name: 'Product Catalog Service',
+      description: 'Build product management microservice',
+      isDone: false,
+      projectId: projectD.id,
+      dueDate: new Date('2025-12-10'),
+    },
+  })
+
+  const taskD3 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employee4.id,
+      name: 'Shopping Cart Implementation',
+      description: 'Implement cart with Redis caching',
+      isDone: false,
+      projectId: projectD.id,
+      dueDate: new Date('2025-12-20'),
+    },
+  })
+
+  const taskD4 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employee6.id,
+      name: 'Payment Gateway Integration',
+      description: 'Integrate Stripe payment processing',
+      isDone: false,
+      projectId: projectD.id,
+      dueDate: new Date('2026-01-10'),
+    },
+  })
+
+  const taskD5 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employeeUser.id,
+      name: 'Order Management System',
+      description: 'Build order processing workflow',
+      isDone: false,
+      projectId: projectD.id,
+      dueDate: new Date('2026-01-20'),
+    },
+  })
+
+  const taskD6 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employee2.id,
+      name: 'Search Functionality',
+      description: 'Implement Elasticsearch for product search',
+      isDone: false,
+      projectId: projectD.id,
+      dueDate: new Date('2026-01-30'),
+    },
+  })
+
+  const taskD7 = await prisma.task.create({
+    data: {
+      type: TaskType.TASK,
+      creatorId: managerUser.id,
+      assigneeId: employee4.id,
+      name: 'Admin Dashboard',
+      description: 'Create admin panel for order management',
+      isDone: false,
+      projectId: projectD.id,
+      dueDate: new Date('2026-02-15'),
     },
   })
 
   await prisma.meetingParticipant.createMany({
     data: [
-      { meetingId: task2.id, userId: mainUser.id },
-      { meetingId: task2.id, userId: managerUser.id },
-      { meetingId: task2.id, userId: employeeUser.id },
+      { meetingId: taskA2.id, userId: mainUser.id },
+      { meetingId: taskA2.id, userId: managerUser.id },
+      { meetingId: taskA2.id, userId: employeeUser.id },
     ],
   })
 
-  // Create vacation requests from employees
-  const nextWeek = new Date(today)
-  nextWeek.setDate(today.getDate() + 7)
-
-  const twoWeeksLater = new Date(nextWeek)
-  twoWeeksLater.setDate(nextWeek.getDate() + 14)
-
-  const nextMonth = new Date(today)
-  nextMonth.setMonth(today.getMonth() + 1)
-
-  const nextMonthEnd = new Date(nextMonth)
-  nextMonthEnd.setDate(nextMonth.getDate() + 3)
-
+  // Create vacation requests
   const vacation1 = await prisma.task.create({
     data: {
       type: TaskType.VACATION,
       creatorId: employeeUser.id,
-      name: 'Summer Vacation',
+      name: 'Holiday Vacation',
       description: 'Two weeks off for family vacation',
       isDone: false,
-      startDate: nextWeek,
-      endDate: twoWeeksLater,
+      startDate: new Date('2025-12-23'),
+      endDate: new Date('2026-01-06'),
     },
   })
 
   const vacation2 = await prisma.task.create({
     data: {
       type: TaskType.VACATION,
-      creatorId: managerUser.id,
+      creatorId: employee5.id,
       name: 'Conference Trip',
       description: 'Attending tech conference',
       isDone: false,
-      startDate: nextMonth,
-      endDate: nextMonthEnd,
+      startDate: new Date('2026-01-15'),
+      endDate: new Date('2026-01-18'),
     },
   })
 
+  // ===== GENERATE TIME ENTRIES PROGRAMMATICALLY =====
+  console.info('Generating time entries...')
+
+  const timeEntries: any[] = []
+  const hoursVariations = [6, 6.5, 7, 7.5, 8, 8, 8, 8.5, 9] // Mostly 8 hours, some variation
+
+  // Helper to generate time entries for a task
+  const generateTimeEntries = (
+    taskId: number,
+    userId: number,
+    startDate: Date,
+    endDate: Date,
+    minEntries: number = 7,
+  ) => {
+    const entries: any[] = []
+    const currentDate = new Date(startDate)
+    let entryCount = 0
+
+    while (currentDate <= endDate && entryCount < 30) {
+      // Max 30 entries per task
+      // Skip weekends
+      if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+        const hours =
+          hoursVariations[Math.floor(Math.random() * hoursVariations.length)]
+        entries.push({
+          taskId,
+          userId,
+          date: new Date(currentDate),
+          hours,
+          note: 'Work on assigned task',
+        })
+        entryCount++
+
+        if (entryCount >= minEntries && Math.random() > 0.7) {
+          break // Randomly stop after minimum entries met
+        }
+      }
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+
+    return entries
+  }
+
+  // PROJECT A - September to December
+  // TaskA1 - Authentication (employeeUser, then handed to employee3)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskA1.id,
+      employeeUser.id,
+      new Date('2025-09-02'),
+      new Date('2025-09-20'),
+      10,
+    ),
+  )
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskA1.id,
+      employee3.id,
+      new Date('2025-09-23'),
+      new Date('2025-09-30'),
+      4,
+    ),
+  ) // Handover
+
+  // TaskA3 - Database Schema (employee2)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskA3.id,
+      employee2.id,
+      new Date('2025-09-02'),
+      new Date('2025-09-18'),
+      12,
+    ),
+  )
+
+  // TaskA6 - Unit Tests (employeeUser)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskA6.id,
+      employeeUser.id,
+      new Date('2025-10-01'),
+      new Date('2025-10-14'),
+      10,
+    ),
+  )
+
+  // TaskA5 - API Integration (employee3)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskA5.id,
+      employee3.id,
+      new Date('2025-10-15'),
+      new Date('2025-10-30'),
+      11,
+    ),
+  )
+
+  // TaskA7 - CI/CD (employee3, then employee2)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskA7.id,
+      employee3.id,
+      new Date('2025-10-28'),
+      new Date('2025-11-05'),
+      6,
+    ),
+  )
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskA7.id,
+      employee2.id,
+      new Date('2025-11-06'),
+      new Date('2025-11-10'),
+      3,
+    ),
+  ) // Handover
+
+  // TaskA4 - Dashboard UI (employee4, ongoing)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskA4.id,
+      employee4.id,
+      new Date('2025-11-11'),
+      new Date('2025-12-02'),
+      15,
+    ),
+  )
+
+  // TaskA8 - Performance (employee2, ongoing)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskA8.id,
+      employee2.id,
+      new Date('2025-11-25'),
+      new Date('2025-12-02'),
+      5,
+    ),
+  )
+
+  // PROJECT B - September to November (completed early)
+  // TaskB1 - Migration Scripts (employee2)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskB1.id,
+      employee2.id,
+      new Date('2025-09-10'),
+      new Date('2025-09-30'),
+      15,
+    ),
+  )
+
+  // TaskB2 - API Migration (employeeUser)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskB2.id,
+      employeeUser.id,
+      new Date('2025-09-23'),
+      new Date('2025-10-14'),
+      15,
+    ),
+  )
+
+  // TaskB3 - Validation (employee3)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskB3.id,
+      employee3.id,
+      new Date('2025-10-08'),
+      new Date('2025-10-24'),
+      12,
+    ),
+  )
+
+  // TaskB4 - Integration Testing (employee5)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskB4.id,
+      employee5.id,
+      new Date('2025-10-15'),
+      new Date('2025-11-04'),
+      14,
+    ),
+  )
+
+  // TaskB5 - Documentation (employee2)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskB5.id,
+      employee2.id,
+      new Date('2025-10-28'),
+      new Date('2025-11-08'),
+      8,
+    ),
+  )
+
+  // TaskB6 - Benchmarking (employeeUser)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskB6.id,
+      employeeUser.id,
+      new Date('2025-11-04'),
+      new Date('2025-11-14'),
+      8,
+    ),
+  )
+
+  // TaskB7 - Deployment (employee3)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskB7.id,
+      employee3.id,
+      new Date('2025-11-11'),
+      new Date('2025-11-20'),
+      7,
+    ),
+  )
+
+  // PROJECT C - October to December (completed late)
+  // TaskC1 - API Design (employee4)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskC1.id,
+      employee4.id,
+      new Date('2025-10-01'),
+      new Date('2025-10-14'),
+      10,
+    ),
+  )
+
+  // TaskC2 - Auth Service (employee5)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskC2.id,
+      employee5.id,
+      new Date('2025-10-07'),
+      new Date('2025-10-24'),
+      12,
+    ),
+  )
+
+  // TaskC3 - Push Notifications (employee6)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskC3.id,
+      employee6.id,
+      new Date('2025-10-21'),
+      new Date('2025-11-04'),
+      10,
+    ),
+  )
+
+  // TaskC4 - File Upload (employee4, handed to employee6)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskC4.id,
+      employee4.id,
+      new Date('2025-11-01'),
+      new Date('2025-11-10'),
+      7,
+    ),
+  )
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskC4.id,
+      employee6.id,
+      new Date('2025-11-11'),
+      new Date('2025-11-15'),
+      3,
+    ),
+  ) // Handover
+
+  // TaskC5 - Real-time Sync (employee5)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskC5.id,
+      employee5.id,
+      new Date('2025-11-08'),
+      new Date('2025-11-21'),
+      10,
+    ),
+  )
+
+  // TaskC6 - Rate Limiting (employee6)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskC6.id,
+      employee6.id,
+      new Date('2025-11-18'),
+      new Date('2025-11-27'),
+      7,
+    ),
+  )
+
+  // TaskC7 - Load Testing (managerUser, then employee4)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskC7.id,
+      managerUser.id,
+      new Date('2025-11-25'),
+      new Date('2025-11-28'),
+      3,
+    ),
+  )
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskC7.id,
+      employee4.id,
+      new Date('2025-11-29'),
+      new Date('2025-12-02'),
+      2,
+    ),
+  ) // Handover
+
+  // PROJECT D - November to December (ongoing)
+  // TaskD1 - Architecture (employeeUser)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskD1.id,
+      employeeUser.id,
+      new Date('2025-11-01'),
+      new Date('2025-11-14'),
+      10,
+    ),
+  )
+
+  // TaskD2 - Product Catalog (employee2, ongoing)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskD2.id,
+      employee2.id,
+      new Date('2025-11-15'),
+      new Date('2025-12-02'),
+      12,
+    ),
+  )
+
+  // TaskD3 - Shopping Cart (employee4, ongoing)
+  timeEntries.push(
+    ...generateTimeEntries(
+      taskD3.id,
+      employee4.id,
+      new Date('2025-11-18'),
+      new Date('2025-12-02'),
+      10,
+    ),
+  )
+
+  // Add some extra hours to ensure employees reach ~168 hours/month
+  // Fill remaining days in November for employees
+  const fillNovemberHours = (userId: number, taskId: number) => {
+    for (let day = 1; day <= 30; day++) {
+      const date = new Date('2025-11-01')
+      date.setDate(day)
+      if (date.getDay() !== 0 && date.getDay() !== 6) {
+        // Check if this user already has an entry on this date
+        const hasEntry = timeEntries.some(
+          (e) =>
+            e.userId === userId &&
+            e.date.toDateString() === date.toDateString(),
+        )
+        if (!hasEntry) {
+          timeEntries.push({
+            taskId,
+            userId,
+            date: new Date(date),
+            hours: 8,
+            note: 'Work on assigned task',
+          })
+        }
+      }
+    }
+  }
+
+  // Fill September for some employees
+  const fillSeptemberHours = (userId: number, taskId: number) => {
+    for (let day = 1; day <= 30; day++) {
+      const date = new Date('2025-09-01')
+      date.setDate(day)
+      if (date.getDay() !== 0 && date.getDay() !== 6) {
+        const hasEntry = timeEntries.some(
+          (e) =>
+            e.userId === userId &&
+            e.date.toDateString() === date.toDateString(),
+        )
+        if (!hasEntry) {
+          timeEntries.push({
+            taskId,
+            userId,
+            date: new Date(date),
+            hours: 8,
+            note: 'Work on assigned task',
+          })
+        }
+      }
+    }
+  }
+
+  // Fill October for some employees
+  const fillOctoberHours = (userId: number, taskId: number) => {
+    for (let day = 1; day <= 31; day++) {
+      const date = new Date('2025-10-01')
+      date.setDate(day)
+      if (date.getDay() !== 0 && date.getDay() !== 6) {
+        const hasEntry = timeEntries.some(
+          (e) =>
+            e.userId === userId &&
+            e.date.toDateString() === date.toDateString(),
+        )
+        if (!hasEntry) {
+          timeEntries.push({
+            taskId,
+            userId,
+            date: new Date(date),
+            hours: 8,
+            note: 'Work on assigned task',
+          })
+        }
+      }
+    }
+  }
+
+  // Ensure all employees have ~168 hours for at least one month
+  fillSeptemberHours(employee2.id, taskB1.id)
+  fillOctoberHours(employeeUser.id, taskB2.id)
+  fillOctoberHours(employee3.id, taskB3.id)
+  fillOctoberHours(employee5.id, taskB4.id)
+  fillNovemberHours(employee4.id, taskC1.id)
+  fillNovemberHours(employee6.id, taskC6.id)
+
+  // Insert all time entries
+  console.info(`Creating ${timeEntries.length} time entries...`)
   await prisma.timeEntry.createMany({
-    data: [
-      // August entries - Task 3 (Database Schema) - employee2
-      {
-        taskId: task3.id,
-        userId: employee2.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 3, 5),
-        hours: 7.0,
-        note: 'Initial schema design and entity relationships',
-      },
-      {
-        taskId: task3.id,
-        userId: employee2.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 3, 6),
-        hours: 8.0,
-        note: 'Implemented User, Project, and Task models',
-      },
-      {
-        taskId: task3.id,
-        userId: employee2.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 3, 9),
-        hours: 6.5,
-        note: 'Added TimeEntry and Meeting models',
-      },
-      {
-        taskId: task3.id,
-        userId: employee2.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 3, 10),
-        hours: 4.0,
-        note: 'Schema review and adjustments',
-      },
-      // August entries - Task 6 (Migration Scripts) - employee2
-      {
-        taskId: task6.id,
-        userId: employee2.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 3, 12),
-        hours: 8.0,
-        note: 'Analyzed legacy database structure',
-      },
-      {
-        taskId: task6.id,
-        userId: employee2.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 3, 13),
-        hours: 8.0,
-        note: 'Created data transformation scripts',
-      },
-      {
-        taskId: task6.id,
-        userId: employee2.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 3, 16),
-        hours: 7.5,
-        note: 'Testing migration on staging environment',
-      },
-      {
-        taskId: task6.id,
-        userId: employee2.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 3, 17),
-        hours: 6.5,
-        note: 'Final migration execution and validation',
-      },
-      // September entries - Task 1 (Authentication) - employeeUser
-      {
-        taskId: task1.id,
-        userId: employeeUser.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 2, 3),
-        hours: 6.5,
-        note: 'Research OAuth2 providers and JWT libraries',
-      },
-      {
-        taskId: task1.id,
-        userId: employeeUser.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 2, 4),
-        hours: 8.0,
-        note: 'Implemented OAuth2 flow with Google',
-      },
-      {
-        taskId: task1.id,
-        userId: employeeUser.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 2, 7),
-        hours: 7.5,
-        note: 'Added JWT token generation and validation',
-      },
-      {
-        taskId: task1.id,
-        userId: employeeUser.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 2, 8),
-        hours: 5.0,
-        note: 'Testing and bug fixes for auth flow',
-      },
-      // September entries - Task 7 (Unit Tests) - employeeUser
-      {
-        taskId: task7.id,
-        userId: employeeUser.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 2, 14),
-        hours: 6.0,
-        note: 'Set up testing framework and wrote first test cases',
-      },
-      {
-        taskId: task7.id,
-        userId: employeeUser.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 2, 15),
-        hours: 7.0,
-        note: 'Completed authentication module test coverage',
-      },
-      {
-        taskId: task7.id,
-        userId: employeeUser.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 2, 16),
-        hours: 5.5,
-        note: 'Added integration tests and edge cases',
-      },
-      // October entries - Task 4 (Dashboard UI) - employee4
-      {
-        taskId: task4.id,
-        userId: employee4.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 4),
-        hours: 7.0,
-        note: 'Set up Nuxt UI and created base layout',
-      },
-      {
-        taskId: task4.id,
-        userId: employee4.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 5),
-        hours: 8.0,
-        note: 'Built project list and card components',
-      },
-      {
-        taskId: task4.id,
-        userId: employee4.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 6),
-        hours: 6.5,
-        note: 'Implemented time administration view',
-      },
-      {
-        taskId: task4.id,
-        userId: employee4.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 11),
-        hours: 7.5,
-        note: 'Added responsive design and dark mode',
-      },
-      {
-        taskId: task4.id,
-        userId: employee4.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 12),
-        hours: 6.0,
-        note: 'Created vacation request components',
-      },
-      // October entries - Task 5 (API Integration) - employee3
-      {
-        taskId: task5.id,
-        userId: employee3.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 7),
-        hours: 5.0,
-        note: 'Defined API endpoints for projects',
-      },
-      {
-        taskId: task5.id,
-        userId: employee3.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 8),
-        hours: 7.0,
-        note: 'Implemented user and task API endpoints',
-      },
-      {
-        taskId: task5.id,
-        userId: employee3.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 11),
-        hours: 6.5,
-        note: 'Added error handling and validation',
-      },
-      {
-        taskId: task5.id,
-        userId: employee3.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 13),
-        hours: 8.0,
-        note: 'Integrated time entries API with frontend',
-      },
-      // October entries - Task 8 (CI/CD) - employee3
-      {
-        taskId: task8.id,
-        userId: employee3.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 18),
-        hours: 6.0,
-        note: 'Set up GitHub Actions workflow files',
-      },
-      {
-        taskId: task8.id,
-        userId: employee3.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 19),
-        hours: 7.5,
-        note: 'Configured build and test jobs',
-      },
-      {
-        taskId: task8.id,
-        userId: employee3.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 20),
-        hours: 5.5,
-        note: 'Added deployment pipeline for staging',
-      },
-      // Additional October entries - spread across employees
-      {
-        taskId: task4.id,
-        userId: employee4.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 18),
-        hours: 6.5,
-        note: 'UI polish and accessibility improvements',
-      },
-      {
-        taskId: task5.id,
-        userId: employee3.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 25),
-        hours: 7.0,
-        note: 'Performance optimization and caching',
-      },
-      // Manager working on various tasks
-      {
-        taskId: task5.id,
-        userId: managerUser.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 14),
-        hours: 4.0,
-        note: 'Code review and architecture planning',
-      },
-      {
-        taskId: task8.id,
-        userId: managerUser.id,
-        date: new Date(today.getFullYear(), today.getMonth() - 1, 21),
-        hours: 3.5,
-        note: 'Review CI/CD configuration and approval',
-      },
-    ],
+    data: timeEntries,
   })
 
   if (protectedUserIds.length > 0) {
