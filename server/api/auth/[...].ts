@@ -5,7 +5,6 @@ import _CredentialsProvider from 'next-auth/providers/credentials'
 import _DiscordProvider from 'next-auth/providers/discord'
 import _GoogleProvider from 'next-auth/providers/google'
 import type { User } from '~~/.generated/prisma/client'
-import { prisma } from '~~/server/utils/prisma'
 import '~~/types/next-auth.d'
 
 const GoogleProvider = (_GoogleProvider as any)
@@ -105,6 +104,8 @@ export default NuxtAuthHandler({
     },
 
     async signIn({ user, account, profile }) {
+      console.log(user, account, profile)
+
       if (!account) {
         return '/login?notify=' + encodeURI('No account information available')
       }

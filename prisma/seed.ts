@@ -1,6 +1,6 @@
-import { Role, TaskType } from '~~/.generated/prisma/client'
-import { prisma } from '~~/server/utils/prisma'
 import bcrypt from 'bcrypt'
+import { Role, TaskType } from '~~/.generated/prisma/client'
+import { prisma } from './prisma'
 
 let protectedUserIds: string[] | any[]
 

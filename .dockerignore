@@ -1,6 +1,13 @@
 node_modules
+dist
+docs
 .nuxt
 .output
-dist
 .git
 .env
+.generated
+.vscode
+.env
+.prettierc
+.git
+.gitignore

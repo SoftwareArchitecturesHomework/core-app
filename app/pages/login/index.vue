@@ -1,34 +1,33 @@
 <script setup lang="ts">
 useHead({ title: 'Sign In' })
 definePageMeta({ layout: false })
-const email = ref('')
-const password = ref('')
-const loading = ref(false)
-const error = ref('')
 const { signIn, status } = useAuth()
 const route = useRoute()
 const toast = useToast()
 
-watch(
-  () => route.query.notify,
-  (notify) => {
-    if (!notify) return
-    toast.add({
-      title: 'Login failed',
-      description: notify.toString(),
-      color: 'error',
-    })
+if (import.meta.client) {
+  watch(
+    () => route.query.notify,
+    (notify) => {
+      if (!notify) return
 
-    navigateTo({
-      path: route.path,
-      query: {
-        ...route.query,
-        notify: undefined,
-      },
-    })
-  },
-  { deep: true, immediate: true },
-)
+      toast.add({
+        title: 'Login failed',
+        description: notify.toString(),
+        color: 'error',
+      })
+
+      navigateTo({
+        path: route.path,
+        query: {
+          ...route.query,
+          notify: undefined,
+        },
+      })
+    },
+    { deep: true, immediate: true },
+  )
+}
 
 // Watch for auth status changes and redirect when authenticated
 watch(
@@ -41,6 +40,10 @@ watch(
   { immediate: true },
 )
 
+const email = ref('')
+const password = ref('')
+const loading = ref(false)
+const error = ref('')
 async function handleCredentialsLogin() {
   loading.value = true
   error.value = ''

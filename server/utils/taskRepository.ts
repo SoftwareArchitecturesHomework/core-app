@@ -1,5 +1,3 @@
-import { prisma } from '~~/server/utils/prisma'
-
 export async function getPendingVacationRequestsForManager(managerId: number) {
   const vacations = await prisma.task.findMany({
     where: {
