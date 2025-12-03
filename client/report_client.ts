@@ -1,8 +1,3 @@
-// NOTE: This client uses standard JavaScript Error objects instead of @bufbuild/connect types.
-
-const reportServiceUrl = 'http://localhost:8000'
-const reportServiceApiKey =
-  'eb791ef310f839e817cc0aac46f5883adea878e57f60472fba9d670ef74b2187'
 
 /**
  * Custom Error class to handle authenticated HTTP failures gracefully.
@@ -23,8 +18,16 @@ class RestClientError extends Error {
  * Implements the core functions for the REST report endpoints.
  */
 export class ReportRestClient {
+
+  private reportServiceUrl : string
+  private reportServiceApiKey : string
+
   constructor() {
-    if (!reportServiceUrl || !reportServiceApiKey) {
+    const config = useRuntimeConfig();
+
+    this.reportServiceUrl = config.public.reportServiceUrl
+    this.reportServiceApiKey = config.public.reportServiceApiKey
+    if (!this.reportServiceUrl || !this.reportServiceApiKey) {
       throw new Error(
         'ReportRestClient must have REPORT_SERVICE_URL and REPORT_SERVICE_API_KEY set in the runtime environment.',
       )
@@ -47,7 +50,7 @@ export class ReportRestClient {
     urlPath: string,
     token: string,
   ): Promise<Response> {
-    const baseUrl = reportServiceUrl as string
+    const baseUrl = this.reportServiceUrl as string
     const url = `${baseUrl}${urlPath}`
 
     const response = await fetch(url, {
@@ -55,7 +58,6 @@ export class ReportRestClient {
       headers: this.getHeaders(token),
     })
 
-    // Use standard error handling without ConnectError
     if (response.status === 401) {
       throw new RestClientError(
         'Authentication Failed: Invalid API Key/Token.',
@@ -80,7 +82,7 @@ export class ReportRestClient {
    * @returns Promise<Blob> A Blob of type application/pdf.
    */
   public async getManagerPDF(managerId: number): Promise<Blob> {
-    const token = reportServiceApiKey as string
+    const token = this.reportServiceApiKey as string
     const urlPath = `/reports/manager/${managerId}/pdf`
 
     const response = await this.makeAuthenticatedFetch(urlPath, token)
@@ -97,7 +99,7 @@ export class ReportRestClient {
    * @returns Promise<Blob> A Blob of type text/html.
    */
   public async getManagerHTML(managerId: number): Promise<Blob> {
-    const token = reportServiceApiKey as string
+    const token = this.reportServiceApiKey as string
     const urlPath = `/reports/manager/${managerId}/html`
 
     const response = await this.makeAuthenticatedFetch(urlPath, token)
