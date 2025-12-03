@@ -1,4 +1,3 @@
-import { prisma } from '~~/server/utils/prisma'
 export async function createProject(
   ownerId: number,
   name: string,

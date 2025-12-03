@@ -1,48 +1,45 @@
-import { prisma } from '~~/server/utils/prisma'
-import { defineEventHandler} from 'h3'
-import {getServerSession} from "#auth";
+import { getServerSession } from '#auth'
+import { defineEventHandler } from 'h3'
 
 export default defineEventHandler(async (event) => {
-    const session = await getServerSession(event)
-    const user = session?.user
+  const session = await getServerSession(event)
+  const user = session?.user
 
-    if (!session?.user || !user?.id) {
-        console.error(
-            'Unauthorized - session.user:',
-            session?.user,
-            'user.id:',
-            user?.id,
-        )
-        throw createError({
-            statusCode: 401,
-            statusMessage: 'Unauthorized',
-        })
-    }
-
-    return prisma.task.findMany({
-        where: {
-          OR:[
-            {
-              assigneeId: user.id,
-            },
-            {
-              creatorId: user.id
-            }
-          ]
-        },
-      include: {
-        meetingParticipants: {
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-              }
-            }
-          }
-        }
-      }
+  if (!session?.user || !user?.id) {
+    console.error(
+      'Unauthorized - session.user:',
+      session?.user,
+      'user.id:',
+      user?.id,
+    )
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Unauthorized',
     })
+  }
 
+  return prisma.task.findMany({
+    where: {
+      OR: [
+        {
+          assigneeId: user.id,
+        },
+        {
+          creatorId: user.id,
+        },
+      ],
+    },
+    include: {
+      meetingParticipants: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  })
 })
-

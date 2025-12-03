@@ -1,5 +1,3 @@
-import { prisma } from '~~/server/utils/prisma'
-
 export async function getUserById(userId: number) {
   return await prisma.user.findUnique({
     where: {
