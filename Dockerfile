@@ -33,6 +33,7 @@ FROM oven/bun:latest AS production
 ENV NUXT_HOST=0.0.0.0
 ENV NUXT_PORT=3000
 ENV NODE_ENV=production
+
 WORKDIR /app
 COPY ./entrypoint.sh ./
 RUN chmod +x ./entrypoint.sh
@@ -40,4 +41,4 @@ EXPOSE 3000
 ENTRYPOINT [ "./entrypoint.sh" ]
 CMD ["bun", "run", ".output/server/index.mjs"]
 
-COPY --from=build /app /app/.output
+COPY --from=build /app/.output /app/.output
