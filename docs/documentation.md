@@ -51,7 +51,7 @@ A felettesek megnézhetik a beosztottjaik jóváhagyásra váró szabadnapjait, 
   - Szabadságok figyelembevétele a kötelező órákból
   - Státusz jelzés (elegendő/hiányos/nincs bejegyzés)
 - **Naptár nézet**
-  - Meetingek szabadságok és események megtekintése a naptárban
+  - Meetingek, szabadságok és események megtekintése a naptárban
   - Új meeting hozzáadása és módosítása
   - Új szabadság hozzáadása és módosítása
   - Új esemény hozzáadása és módosítása
@@ -63,11 +63,13 @@ A felettesek megnézhetik a beosztottjaik jóváhagyásra váró szabadnapjait, 
   - Email értesítések szabadság igénylésekről
   - Discord értesítések (opcionális)
 
+- **Riportok**
+
 ## Rendszer környezete
 
 A rendszer egy modern webes alkalmazás, amely három fő komponensből áll. A központi alkalmazás egy Nuxt.js alapú full-stack web alkalmazás, amely a felhasználói felületet (Vue.js komponensek), az üzleti logikát és az API végpontokat egyaránt tartalmazza. Az alkalmazás PostgreSQL relációs adatbázist használ az adatok tárolására, amely Prisma ORM segítségével kerül elérésre.
 
-A hitelesítés NextAuth (Auth.js) könyvtárral van megvalósítva, amely támogatja mind a Google OAuth alapú bejelentkezést, mind az email-jelszó páros hitelesítést. A munkamenetek JWT tokenekkel vannak kezelve, biztosítva a biztonságos felhasználói azonosítást. A rendszer szerepkör alapú hozzáférés-vezérlést (RBAC) implementál, három szerepkörrel: Admin, Menedzser és Alkalmazott.
+A hitelesítés NextAuth (Auth.js) könyvtárral van megvalósítva, amely támogatja mind a Google OAuth alapú bejelentkezést, mind az email-jelszó páros hitelesítést. A munkamenetek JWT tokenekkel vannak kezelve, biztosítva a biztonságos felhasználói azonosítást. A rendszer szerepkör alapú hozzáférés-vezérlést (RBAC) implementál, két szerepkörrel: Menedzser és Alkalmazott.
 
 Az értesítési szolgáltatásokat egy Elixir nyelven írt microservice kezeli, amely felelős az email és Discord értesítések kiküldéséért. Emellett egy Python alapú microservice gondoskodik a riportok és statisztikák generálásáról. A három komponens REST API-kon keresztül kommunikál egymással.
 
@@ -381,7 +383,7 @@ Az API réteg (`/server/api/`) tartalmazza a HTTP végpontokat. Nuxt.js file-bas
 ### Authentication réteg
 
 Az autentikáció NextAuth (Auth.js) könyvtárral van implementálva (`/server/api/auth/[...].ts`).
-Minden endpoint-ot csak bejelentkezett felhasználók érnek el. A az adott felhasználó jogosultsága validálva van az egyes kéréseknél. PL.: Task-ot csak a a létrehozója törölhet
+Minden endpoint-ot csak bejelentkezett felhasználók érnek el. Az adott felhasználó jogosultsága validálva van az egyes kéréseknél. PL.: Task-ot csak a létrehozója törölhet
 
 **Támogatott provider-ek**:
 
@@ -490,6 +492,13 @@ A frontend Vue.js komponensekből áll, Nuxt.js keretrendszerben (`/app/`).
 - Sötét/világos téma támogatás
 - Reszponzív design
 - Előre elkészített gyakran használt UI komponenesek. (Card, DropDown ...)
+
+
+**Naptár könyvtár**: FullCalendar - robusztus és rugalmas naptárkönyvtár
+
+  - Többféle nézet: Támogatja a fő naptárnézeteket, mint a hónap, hét (időráccsal vagy anélkül), nap és a különböző lista nézetek
+
+  - Interaktivitás: Támogatja az eseményekkel való interakciót (pl. drag and drop, kattintás). 
 
 ### Rétegek közötti kommunikáció
 
