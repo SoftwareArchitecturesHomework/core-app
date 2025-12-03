@@ -13,7 +13,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY prisma ./prisma
 RUN pnpm exec prisma generate
 COPY . .
-ENV NITRO_PRESET=bun
 RUN pnpm run build
 
 FROM base AS migrator
@@ -29,16 +28,11 @@ COPY prisma.config.ts .
 COPY tsconfig.seed.json .
 RUN pnpm exec prisma generate
 
-FROM oven/bun:latest AS production
-ENV NUXT_HOST=0.0.0.0
-ENV NUXT_PORT=3000
-ENV NODE_ENV=production
-
-WORKDIR /app
+FROM base AS production
 COPY ./entrypoint.sh ./
 RUN chmod +x ./entrypoint.sh
 EXPOSE 3000
 ENTRYPOINT [ "./entrypoint.sh" ]
-CMD ["bun", "run", ".output/server/index.mjs"]
+CMD ["node", ".output/server/index.mjs"]
 
 COPY --from=build /app/.output /app/.output
