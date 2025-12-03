@@ -4,7 +4,7 @@ ENV NUXT_HOST=0.0.0.0
 ENV NUXT_PORT=3000
 ENV NODE_ENV=production
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm tsx
 
 WORKDIR /app
 
@@ -18,6 +18,7 @@ RUN pnpx prisma generate
 
 COPY . .
 RUN pnpm run build
+
 EXPOSE 3000
 
-CMD ["pnpx", "prisma", "migrate", "||", "node", ".output/server/index.mjs"]
+CMD ["sh", "-c", "pnpx prisma migrate deploy && tsx --tsconfig tsconfig.seed.json prisma/seed-runner.ts && node .output/server/index.mjs"]

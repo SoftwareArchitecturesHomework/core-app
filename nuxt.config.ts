@@ -15,11 +15,11 @@ export default defineNuxtConfig({
     authUrl: process.env.NUXT_AUTH_URL || 'http://localhost:3000',
     commsAPIUrl: process.env.NUXT_COMMS_API_URL || '',
     jwtPrivateKey: process.env.NUXT_JWT_PRIVATE_KEY || '',
-    public:{
-      reportServiceUrl: process.env.REPORT_SERVICE_URL || 'http://localhost:8000',
-      reportServiceApiKey: process.env.REPORT_SERVICE_API_KEY
-    }
-    
+    public: {
+      reportServiceUrl:
+        process.env.NUXT_PUBLIC_REPORT_SERVICE_URL || 'http://localhost:8000',
+      reportServiceApiKey: process.env.NUXT_PUBLIC_REPORT_SERVICE_API_KEY,
+    },
   },
   app: {
     head: {
