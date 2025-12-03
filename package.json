@@ -13,7 +13,10 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "docker:compose": "docker compose up --build"
+    "docker:compose": "docker compose up --build",
+    "docker:release": "nr docker:release:core && nr docker:release:migrator",
+    "docker:release:core": "docker build --target production . -t wingsmc/work-planner-core:latest && docker push wingsmc/work-planner-core:latest",
+    "docker:release:migrator": "docker build --target migrator . -t wingsmc/work-planner-core:latest && docker push wingsmc/work-planner-core:latest"
   },
   "dependencies": {},
   "devDependencies": {
