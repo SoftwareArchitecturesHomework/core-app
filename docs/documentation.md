@@ -51,6 +51,7 @@ A felettesek megnézhetik a beosztottjaik jóváhagyásra váró szabadnapjait, 
   - Szabadságok figyelembevétele a kötelező órákból
   - Státusz jelzés (elegendő/hiányos/nincs bejegyzés)
 - **Naptár nézet**
+  - Meetingek szabadságok és események megtekintése a naptárban
   - Új meeting hozzáadása és módosítása
   - Új szabadság hozzáadása és módosítása
   - Új esemény hozzáadása és módosítása
@@ -70,7 +71,7 @@ A hitelesítés NextAuth (Auth.js) könyvtárral van megvalósítva, amely támo
 
 Az értesítési szolgáltatásokat egy Elixir nyelven írt microservice kezeli, amely felelős az email és Discord értesítések kiküldéséért. Emellett egy Python alapú microservice gondoskodik a riportok és statisztikák generálásáról. A három komponens REST API-kon keresztül kommunikál egymással.
 
-A rendszer Docker konténerekben futtatható, megkönnyítve a fejlesztést és a telepítést. A frontend modern, reszponzív felületet biztosít Nuxt UI komponenskönyvtár és TailwindCSS segítségével, támogatva a világos és sötét témákat is.
+A rendszer Docker compose-al futtatható, megkönnyítve a fejlesztést és a telepítést. A frontend modern, reszponzív felületet biztosít Nuxt UI komponenskönyvtár és TailwindCSS segítségével, támogatva a világos és sötét témákat is.
 
 # Architektúra
 
@@ -78,7 +79,7 @@ A rendszer Docker konténerekben futtatható, megkönnyítve a fejlesztést és 
 
 ### Magas szintű architektúra
 
-A rendszer mikroszerviz alapú architektúrát követ, amely három fő komponensből áll:
+A rendszer microservice alapú architektúrát követ, amely három fő komponensből áll:
 
 1. **Core Application** (Nuxt.js) - Központi webes alkalmazás
 2. **Communications Service** (Elixir/Phoenix) - Értesítési mikroszerviz
@@ -102,21 +103,32 @@ subgraph DB["Database"]
     Postgres["PostgreSQL"]
 end
 
+subgraph Outside["Outside context"]
+    Gmail["Gmail"]
+    Discord["Discord"]
+end
+
 User --> CoreAPI
 CoreAPI --> Comms
-CoreAPI --> Reporting
+Comms --> CoreAPI
+Comms --> Gmail
+Comms --> Discord
+Discord --> Comms
+User --> Reporting
 CoreAPI --> Postgres
+Reporting --> Postgres
+
 ```
 
 ### Architektúrális döntések és indoklásuk
 
-#### Mikroszerviz architektúra
+#### Microservice architektúra
 
-A rendszer mikroszerviz alapú felépítést követ, amely az alábbi előnyöket nyújtja:
+A rendszer microservice alapú felépítést követ, amely az alábbi előnyöket nyújtja:
 
 **Szeparált felelősségek**: Minden mikroszerviz egy konkrét üzleti funkciót lát el (értesítések, riportok), amely egyszerűsíti a karbantartást és fejlesztést.
 
-**Technológiai függetlenség**: Minden szolgáltatás a feladatához legmegfelelőbb technológiával készülhet:
+**Technológiai függetlenség**: Minden szolgáltatás a feladatköréhez jól passzoló technológiával készülhet:
 
 - **Elixir/Phoenix** az értesítési szolgáltatáshoz - kiváló konkurencia kezelés, hibatűrés
 - **Python** a riportgeneráláshoz - gazdag adatelemző és statisztikai könyvtárak (pandas, matplotlib)
@@ -185,6 +197,7 @@ Ez a legalsó réteg, amely a PostgreSQL adatbázist tartalmazza. A Prisma ORM b
 - Típusbiztos adatmodell definíciók
 - Kapcsolatok és megszorítások definiálása
 - Automatikus migráció generálás
+- Automatikus seedelés biztosítása
 
 **Adatmodell (Entity-Relationship Diagram)**:
 
@@ -302,14 +315,14 @@ erDiagram
 
 **Főbb entitások**:
 
-- **User**: Felhasználók, hierarchikus manager-employee kapcsolattal, szerepkör támogatással
-- **Account**: OAuth provider fiókok (Google)
+- **User**: Felhasználók, hierarchikus manager-employee kapcsolattal, szerepkör támogatással (EMPLOYEE, MANAGER role-ok)
+- **Account**: OAuth provider fiókok (Google, Discord)
 - **Session**: Felhasználói munkamenetek (JWT esetén nem használt)
 - **Project**: Projektek kezdési és befejezési dátumokkal
-- **UserProject**: Összekapcsoló tábla felhasználók és projektek között (many-to-many)
+- **UserProject**: Kapcsoló tábla felhasználók és projektek között (many-to-many)
 - **Task**: Többcélú entitás - feladatok, megbeszélések, szabadságok, egyéni feladatok
 - **TimeEntry**: Munkaidő bejegyzések feladatokhoz rendelve
-- **MeetingParticipant**: Megbeszélés résztvevők
+- **MeetingParticipant**: Kapcsolótábla egy megbeszélés és résztvevői között
 
 ### Repository réteg (Data Access Layer)
 
@@ -338,7 +351,7 @@ A Core Application esetében a service réteg **jelenleg nincs külön kiválasz
 
 **Komplex üzleti logika elhelyezése**:
 
-A rendszer architektúrájában a jelentős üzleti logika a **mikroszervizekben** található:
+A rendszer architektúrájában a jelentős üzleti logika a **microservice-ekben** található:
 
 - **Communications Service** (Elixir): Értesítési szabályok, email template generálás, Discord integráció logika
 - **Reporting Service** (Python): Statisztikai számítások, riportgenerálás, adatelemzés
@@ -368,10 +381,12 @@ Az API réteg (`/server/api/`) tartalmazza a HTTP végpontokat. Nuxt.js file-bas
 ### Authentication réteg
 
 Az autentikáció NextAuth (Auth.js) könyvtárral van implementálva (`/server/api/auth/[...].ts`).
+Minden endpoint-ot csak bejelentkezett felhasználók érnek el. A az adott felhasználó jogosultsága validálva van az egyes kéréseknél. PL.: Task-ot csak a a létrehozója törölhet
 
 **Támogatott provider-ek**:
 
 - Google OAuth 2.0
+- Discord OAuth
 - Email-jelszó (Credentials Provider)
 
 **JWT munkamenet**:
@@ -395,39 +410,86 @@ A frontend Vue.js komponensekből áll, Nuxt.js keretrendszerben (`/app/`).
 **Oldalak** (`/app/pages/`):
 
 - `login/` - Bejelentkezés
+  <center>
+
   ![login](image-5.png)
+
+  </center>
+
 - `projects/` - Projekt menedzsment oldalak
+  <center>
+
   ![project lis](image.png)
+
   ![project details](image-1.png)
+
+  </center>
+
 - `tasks/` - Feladat kezelés oldalak
+  <center>
+
   ![task details](image-2.png)
+
+  </center>
+
 - `administration/` - Adminisztrációs felület
+  <center>
+
   ![administration](image-3.png)
+
+  </center>
+
 - `approvals/` - Jóváhagyások
+  <center>
+
   ![approvals](image-4.png)
+
+  </center>
+
 - `calendar/` - naptár nézet
+  <center>
+
   ![calendar](image-6.png)
+
+  </center>
   - új esemény létrehozása
-    ![create_new_event](image-7.png)
+    <center>
+
+  ![create_new_event](image-7.png)
+
+    </center>
   - új meeting létrehozása
-    ![create_new_meeting](image-8.png)
-    ![create_new_meeting](image-9.png)
-    ![create_new_meeting](image-10.png)
+    <center>
+
+  ![create_new_meeting](image-8.png)
+
+  ![create_new_meeting](image-9.png)
+
+  ![create_new_meeting](image-10.png)
+
+    </center>
   - új szabadság létrehozása
-    ![create_vacation](image-11.png)
+    <center>
+
+  ![create_vacation](image-11.png)
+
+    </center>
   - a módosító felületeken ugyanezek jönnek be, az adatok betöltésével:
-    ![update_meeting](image-12.png)
+    <center>
+
+  ![update_meeting](image-12.png)
+
+    </center>
 
 **Composable-ök** (`/app/composables/`):
 
-- `useUser.ts` - Felhasználói session kezelés
-- `localStore.ts` - Local storage kezelés
+- `useUser.ts` - A felhasználó adatainak kiolvasását könnyíti.
 
 **UI könyvtár**: Nuxt UI komponensek TailwindCSS-el
 
 - Sötét/világos téma támogatás
 - Reszponzív design
-- Formok, modal-ok, card-ok, dropdown-ok
+- Előre elkészített gyakran használt UI komponenesek. (Card, DropDown ...)
 
 ### Rétegek közötti kommunikáció
 
@@ -440,9 +502,10 @@ graph TD
     DB[(PostgreSQL<br/>Database)]
 
     UI -->|HTTP Request| API
-    API -->|Validate| Auth
+    API -->|Authorize| Auth
     API -->|Query| Repo
     Repo -->|Prisma ORM| DB
+    Auth --> |Prisma ORM| DB
 ```
 
 **Elvek**:
@@ -452,27 +515,24 @@ graph TD
 - **Abstraction**: Minden réteg elrejti az implementációs részleteket
 - **Testability**: Rétegek külön-külön unit tesztelhetők
 
-## Mikroszervicek
+## Microsevice-ek
 
-A rendszer két különálló mikroszervizzel egészül ki, amelyek a Core Application-től függetlenül futnak és specifikus üzleti funkciókat látnak el.
+A rendszer két különálló microserviceszel egészül ki, amelyek a Core Application-től függetlenül futnak és specifikus üzleti funkciókat látnak el.
 
 ### Comms Szolgáltatás – (Elixir/Phoenix)
-
-Ez a dokumentum a Comms szolgáltatás valós, jelenlegi működését írja le. Csak két fő funkcionális területet kezel: (1) e‑mail értesítések küldése sablonokból és (2) Discord interakciók / parancsok feldolgozása. Minden korábbi utalás gRPC-re, általános üzenetbuszra, összetett streamelt dashboardokra vagy többcsatornás szabálymotorra eltávolításra került, mert nem részei a tényleges implementációnak.
 
 #### 1. Cél és Hatókör
 
 - E‑mailek küldése üzleti események (feladat kiosztás, projekt státusz, szabadság kérés stb.) alapján.
 - Discord slash command / interaction kérések fogadása, validálása, aláírás ellenőrzése és válasz generálása.
-- Minimális integráció: nincs általános üzenetközvetítő réteg, nincs gRPC szolgáltatás, nincs bonyolult belső queue rendszer.
 
 #### 2. Fő Összetevők
 
 ##### E‑mail
 
 - Swoosh (`Comms.Mailer`) a küldéshez; konfiguráció `:comms` OTP alkalmazás alatt (pl. `smtp_from_email`).
-- Sablonok: `lib/comms_web/templates/email/*.html.eex` – klasszikus `.eex`, NEM LiveView. Minden sablon a várt assign kommenttel indul (pl. `# assigner: %{name: String, email: String}`).
-- Építés: `Comms.Notifications` modul állítja össze a `Swoosh.Email` struktúrát (from, to, subject, body). A body renderelést Phoenix sablonmotor végzi a megfelelő path alapján.
+- Sablonok: `priv/templates/email/*.html.eex` – klasszikus `.eex`. Minden sablon a várt assign kommenttel indul (pl. `# assigner: %{name: String, email: String}`).
+- Builder: `Comms.Notifications` modul állítja össze a `Swoosh.Email` struktúrát (from, to, subject, body). A body renderelést Phoenix sablonmotor végzi a megfelelő path alapján.
 
 ##### Discord
 
@@ -482,8 +542,7 @@ Ez a dokumentum a Comms szolgáltatás valós, jelenlegi működését írja le.
 
 #### 3. Adat és Sablonkezelés
 
-- Nincs komplex perzisztált "message" entitás az e‑mailekhez – az e‑mail összeállítás futáskor történik a kapott paraméterekből.
-- Sablonváltozók: közvetlenül a `render` híváskor kerülnek átadásra assign mapként; a sablonok végeznek interpolációt. Nincs dinamikus sablon verziózás.
+- Sablonváltozók: közvetlenül a `render` híváskor kerülnek átadásra assign mapként; a sablonok végeznek interpolációt.
 - Discord válaszok: általában JSON payload a Discord API elvárásai szerint (type, data). A validáció a signature ellenőrzés és a parancs típus alapján történik.
 
 #### 4. Folyamatok
@@ -502,6 +561,7 @@ Ez a dokumentum a Comms szolgáltatás valós, jelenlegi működését írja le.
 2. `VerifyDiscordSignature` plug hitelesíti (Ed25519).
 3. Controller dekódolja a JSON-t; slash command név alapján routing / dispatch.
 4. Válasz JSON: ack / ephemeral üzenet / follow‑up trigger.
+   - Az ephemeral a discord kontextusában azt jelenti, hogy csak a releváns user látja az adott üzenetet
 
 ##### Discord Command Telepítés
 
@@ -509,7 +569,7 @@ Ez a dokumentum a Comms szolgáltatás valós, jelenlegi működését írja le.
 
 - Ellenőrzi szükséges env változókat.
 - Küldi az upsert kérést a Discord API-hoz Req segítségével.
-- Siker / hiba logolás, hibánál `Mix.raise/1`.
+- Siker / hiba logolás, hibánál.
 
 #### 5. Hibakezelés
 
@@ -521,43 +581,23 @@ Ez a dokumentum a Comms szolgáltatás valós, jelenlegi működését írja le.
 
 - Discord aláírás ellenőrzés kötelező; nincs további token validáció a Discord interactions endpointnál.
 - E‑mail végpontok: belső (feltételezett) használat – javasolt IP / auth réteg (ha még nincs) a router pipeline-ban.
-- `String.to_atom/1` nem használatos felhasználói bemenetre.
 - Sablonokban nincs futtatható kód injektálás: csak interpoláció a kapott assign értékekkel.
 
 #### 7. Konfiguráció
 
-- SMTP from cím: `Application.get_env(:comms, :smtp_from_email, "noreply@example.com")`.
+- SMTP from cím: `Application.get_env(:comms, :smtp_from_email)`.
 - Discord env: `DISCORD_APP_ID`, `DISCORD_BOT_TOKEN`.
-- Telepítés konténerrel: `Dockerfile`, `docker-compose.yaml` (standard Phoenix release). Nincs külön build pipeline a dokumentum szerint.
+- Telepítés konténerrel: `Dockerfile`, `docker-compose.yaml` (standard Phoenix release).
 
 #### 8. Egyszerű Metrikák / Logok (Aktuális Állapot)
 
 - Strukturált log: siker / hiba e‑mail küldés, Discord parancs neve, státusz.
-- Nincs dedikált Telemetry esemény-gyűjtés vagy histogram leírás jelen dokumentumban; igény esetén bővíthető.
-
-#### 9. Javasolt Közeli Fejlesztések
-
-- Alap retry réteg e‑mail küldési hálózati hibákra (pl. 2 próbálkozás, rövid késleltetés).
-- Alap rate limit a Discord notify végponton túlterhelés ellen.
-- Telemetry hook: `:comms, :email, :sent|:error` és `:comms, :discord, :interaction`.
-- Egyszerű audit log (append‑only) táblázat az érzékeny e‑mail eseményekhez.
 
 #### 10. Tesztelési Fókusz
 
 - Unit: `Comms.Notifications` – helyes `from`, `subject`, sablon változó kitöltés.
 - Plug teszt: hamis Discord signature → 403.
 - Mix task: mockolt HTTP válasz (Req adapter konfigurációval) siker / hiba.
-
-#### 11. Korlátok
-
-- Nincs többcsatornás szabálymotor.
-- Nincs gRPC interfész.
-- Nincs általános üzenetsor / queue perzisztencia.
-- Nincs automatikus sablon verziózás.
-
-#### 12. Összegzés
-
-A Comms jelenlegi formájában célzott, kétfunkciós szolgáltatás: e‑mail értesítések és Discord interakciók. Egyszerű moduláris felépítést használ, minimalista hibakezeléssel és könnyen bővíthető metrikákkal. A javasolt fejlesztések azonnal növelnék a megbízhatóságot (retry), láthatóságot (Telemetry), valamint operatív kontrollt (rate limit, audit log) anélkül, hogy felesleges komplexitást adnának hozzá.
 
 ### Reporting Service (Python)
 
@@ -578,6 +618,8 @@ A jelentések tartalmaznak szöveges adatokat, diagramokat, illetve táblázatok
 - `GET reports/manager/{manager_id}/pdf` - Adott id-val rendelkező menedzser riportjának a generálása pdf-ben.
 - `GET reports/manager/{manager_id}/html` - Adott id-val rendelkező menedzser riportjának a generálása html-ben.
 
-# Telepítési leírás
+## Telepítési leírás
 
-Az alkalmazás docker compose segítségével futtatható majd a 3000-es porton érhető el
+### Development
+
+### Production
