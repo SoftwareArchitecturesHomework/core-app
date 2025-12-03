@@ -104,8 +104,6 @@ export default NuxtAuthHandler({
     },
 
     async signIn({ user, account, profile }) {
-      console.log(user, account, profile)
-
       if (!account) {
         return '/login?notify=' + encodeURI('No account information available')
       }
