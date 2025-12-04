@@ -1,4 +1,4 @@
-# Rendszerterv
+# Szoftverarchitektúrák házi feladat dokumentáció
 
 <center>
 
@@ -6,7 +6,15 @@
 
 </center>
 
-### Munkahelyi nyilvántartási rendszer
+### Céges munkaidő napló  
+
+## Csapattagok  
+| Név    | Neptun-kód |
+| -------- | ------- |
+| Farkas Fanni  | EU7XYP     |
+| Bertók Dániel | H01HRM     |
+| Dremák Gergely | KSHSLY    |
+| Forrás Máté Ákos | ONQ3KU    |
 
 # Rendszer célja és környezete
 
@@ -62,8 +70,8 @@ A felettesek megnézhetik a beosztottjaik jóváhagyásra váró szabadnapjait, 
 - **Értesítések**
   - Email értesítések szabadság igénylésekről
   - Discord értesítések (opcionális)
-
 - **Riportok**
+  - HTML és PDF kiterjesztésű riportok megtekintése, letöltése 
 
 ## Rendszer környezete
 
@@ -84,8 +92,8 @@ A rendszer Docker compose-al futtatható, megkönnyítve a fejlesztést és a te
 A rendszer microservice alapú architektúrát követ, amely három fő komponensből áll:
 
 1. **Core Application** (Nuxt.js) - Központi webes alkalmazás
-2. **Communications Service** (Elixir/Phoenix) - Értesítési mikroszerviz
-3. **Reporting Service** (Python) - Riportgeneráló mikroszerviz
+2. **Communications Service** (Elixir/Phoenix) - Értesítési microservice
+3. **Reporting Service** (Python) - Riportgeneráló microservice
 
 ```mermaid
 graph LR
@@ -128,7 +136,7 @@ Reporting --> Postgres
 
 A rendszer microservice alapú felépítést követ, amely az alábbi előnyöket nyújtja:
 
-**Szeparált felelősségek**: Minden mikroszerviz egy konkrét üzleti funkciót lát el (értesítések, riportok), amely egyszerűsíti a karbantartást és fejlesztést.
+**Szeparált felelősségek**: Minden microservice egy konkrét üzleti funkciót lát el (értesítések, riportok), amely egyszerűsíti a karbantartást és fejlesztést.
 
 **Technológiai függetlenség**: Minden szolgáltatás a feladatköréhez jól passzoló technológiával készülhet:
 
@@ -138,11 +146,11 @@ A rendszer microservice alapú felépítést követ, amely az alábbi előnyöke
 
 **Skálázhatóság**: A komponensek egymástól függetlenül skálázhatók. Például az értesítési szolgáltatás külön skálázható nagy terhelés esetén.
 
-**Hibatűrés**: Egy mikroszerviz hibája nem okozza a teljes rendszer leállását. Ha a riportgeneráló szolgáltatás nem érhető el, a core funkciók továbbra is működnek.
+**Hibatűrés**: Egy microservice hibája nem okozza a teljes rendszer leállását. Ha a riportgeneráló szolgáltatás nem érhető el, a core funkciók továbbra is működnek.
 
 #### REST API kommunikáció
 
-A mikroszervizek közötti kommunikációhoz REST API-kat választottunk:
+A microserviceek közötti kommunikációhoz REST API-kat választottunk:
 
 **Egyszerűség**: A REST jól ismert, széles körben támogatott protokoll, amely megkönnyíti az integrációt.
 
@@ -180,7 +188,7 @@ Relációs adatbázist választottunk az alábbi okok miatt:
 
 A munkamenet kezeléshez JWT tokeneket használunk:
 
-**Mikroszerviz kompatibilitás**: A tokenek könnyen validálhatók a különböző szolgáltatásokban.
+**microservice kompatibilitás**: A tokenek könnyen validálhatók a különböző szolgáltatásokban.
 
 **CredentialsProvider támogatás**: Lehetővé teszi mind az OAuth, mind az email-jelszó alapú bejelentkezést.
 
@@ -363,7 +371,7 @@ A Core Application felelőssége ezért elsősorban:
 - Adatok perzisztálása és lekérése
 - Felhasználói hitelesítés és jogosultságkezelés
 - Alapvető input validáció
-- Mikroszervizek koordinálása REST API hívásokon keresztül
+- microserviceek koordinálása REST API hívásokon keresztül
 
 **Jövőbeli fejlesztés**: Amennyiben a Core Application-ben több komplex üzleti logika jelenne meg (pl. összetett munkaidő számítások, automatikus projekt értékelések), akkor érdemes lenne a service réteget kiemelni az API handler-ekből a jobb szeparáció és tesztelhetőség érdekében.
 
@@ -611,9 +619,11 @@ A rendszer két különálló microserviceszel egészül ki, amelyek a Core Appl
 ### Reporting Service (Python)
 
 A riportgeneráló szolgáltatás Python nyelven készült, adatelemzésre és statisztikák előállítására optimalizálva.
-A feladata, hogy a Postgre adatbázisunkon elhelyezett aggregált view-k alapján jelentést készítsen az adott menedzserek projektjeiről.  
+A feladata, hogy a Postgre adatbázisunkon elhelyezett aggregált view-k alapján jelentést készítsen az adott menedzserek projektjeiről, beosztottjairól.  
 HTML-ben és PDF-ben generálja ki a jelentéseket, ezeket gRPC és REST végpontokon keresztül lehet lekérdezni.
-A jelentések tartalmaznak szöveges adatokat, diagramokat, illetve táblázatokat.
+A jelentések tartalmaznak szöveges adatokat, diagramokat, illetve táblázatokat, ezekre pár példa:
+![report_diagrams](image-13.png)
+![report_tables](image-14.png)
 
 **Felelősségek**:
 
@@ -622,10 +632,29 @@ A jelentések tartalmaznak szöveges adatokat, diagramokat, illetve táblázatok
 - Exportálás különböző formátumokba
 - Adatvizualizáció (grafikonok, diagramok)
 
+**Működés**  
+A szolgáltatás válaszidejének növelésének érdekében nem minden kérés alkalmával kerül végrehajtásra a szükséges adatok kinyerését szolgáló SQL lekérdezés, hanem előre definiált view-kból kérdez le az alkalmazás.
+A view-k előre átgondolva, az ábrázolhatóságot figyelembe véve lettek megtervezve. Minden esetben a legfelső szinten a felhasználó id-ja szerint van csoportosítás, hiszen minden jelentés egy adott menedzser számára készül el.
+A lekérdezett adatokból utána diagramokat készít a szoftver, ezeket png-ként elmenti egy temporális könyvtárba, hogy majd a riport generálásakor bele lehessen ágyazni őket.
+A jelentés alapját egy .html kiterjesztésű template jelenti. Ebben a templateben a riportonként nem változó statikus szövegek mellett a későbbiekben kitöltendő változók, illetve css szabályok szerepelnek az igényes megjelenítést szolgálva. A sablon szövegekbe, táblázatokba beszúrásra kerülnek az adatbázisból kinyert adatok, illetve a base64 enkódolású képek (ezzel elérve, hogy beágyazottan, a ténylegesn png nélkül hordozható legyen a html fájl tartalma.). Ezen a ponton a jelentés készen is van, itt vagy megáll a folyamat, mivel a html végpont lett meghívva, vagy pedig pdf generálódik a html-ből. A végeredmény egy 3 oldalas pdf dokumentum, melyben az alábbi statisztikák szerepelnek:  
+- Menedzser alkalmazottjai által ledolgozott munkaórák hónapkonként
+- Menedzser alkalmazottjainak egyes projektekhez elkönyvelt munkaórái
+- Átlagos projekt időtartam
+- Projektek becsült és tényleges hossza közti eltérés
+- Projektekhez könyvelt munkaórák száma hónaponként
+- Alkalmazottak teljes munkaideje projektenkként
+
 **REST API végpontok**:
 
-- `GET reports/manager/{manager_id}/pdf` - Adott id-val rendelkező menedzser riportjának a generálása pdf-ben.
-- `GET reports/manager/{manager_id}/html` - Adott id-val rendelkező menedzser riportjának a generálása html-ben.
+- `GET reports/manager/{manager_id}/pdf` - Adott id-val rendelkező menedzser riportját legenerálja, pdf-be kirendereli, majd application/pdf formátumban visszatér vele.
+- `GET reports/manager/{manager_id}/html` - Adott id-val rendelkező menedzser riportjának a generálása html-ben, visszatérés vele.
+
+**gRPC végpontok**
+
+- `rpc GetManagerHTML` - Adott id-val rendelkező menedzser riportjának a generálása html-ben, visszatérés vele, egy string formájában.
+- `rpc GetManager` - Adott id-val rendelkező menedzser riportjának a generálása pdf-ben, visszatérés vele base64-elt pdf formájában.
+- `rpc GetAllReportsOfManager` - Előző két pont eredményeit egyben adja vissza
+- `rpc GetAllManagerReports` - Az összes menedzser, összes jelentését visszaadja, egyéb metaadatokkal (pl.: a jelentésekben szereplő képek külön) együtt. 
 
 ## Telepítési leírás
 
