@@ -1,5 +1,3 @@
-import type { User } from '~~/.generated/prisma/client'
-
 export default defineEventHandler(async (event) => {
   const { id: discordUserId, task_id, user_id } = await readBody(event)
 
@@ -73,19 +71,21 @@ export default defineEventHandler(async (event) => {
   // Update task assignee
   const updatedTask = await changeTaskAssignee(task_id, assigneeId)
 
-  // Send notification
-  useComms().sendTaskAssignment(
-    event,
-    user as User,
-    userAccount.user as User,
-    updatedTask,
-  )
-
   return {
-    task_id,
+    task: {
+      id: updatedTask.id,
+      name: updatedTask.name,
+      end: updatedTask.endDate,
+      start: updatedTask.startDate,
+      description: updatedTask.description,
+    },
     assignee: {
       id: userAccount.user.id,
       name: userAccount.user.name,
+    },
+    assigner: {
+      id: user.id,
+      name: user.name,
     },
   }
 })
