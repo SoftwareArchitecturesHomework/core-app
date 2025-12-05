@@ -16,7 +16,7 @@
     "docker:compose": "docker compose up --build",
     "docker:release": "nr docker:release:core && nr docker:release:migrator",
     "docker:release:core": "docker build --target production . -t wingsmc/work-planner-core:latest && docker push wingsmc/work-planner-core:latest",
-    "docker:release:migrator": "docker build --target migrator . -t wingsmc/work-planner-core:latest && docker push wingsmc/work-planner-core:latest"
+    "docker:release:migrator": "docker build --target migrator . -t wingsmc/work-planner-migrator:latest && docker push wingsmc/work-planner-migrator:latest"
   },
   "dependencies": {},
   "devDependencies": {
