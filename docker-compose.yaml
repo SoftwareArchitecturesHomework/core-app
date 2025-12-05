@@ -24,6 +24,8 @@ services:
       context: .
       target: migrator
       dockerfile: Dockerfile
+      tags:
+        - wingsmc/work-planner-migrator:latest
     container_name: db-migrator
     environment:
       - DATABASE_URL=postgresql://user:postgrespassword@db:5432/workplanner?schema=workplanner
@@ -40,6 +42,8 @@ services:
       context: .
       target: production
       dockerfile: Dockerfile
+      tags:
+        - wingsmc/work-planner-core:latest
     container_name: core
     ports:
       - "3000:3000"
@@ -67,8 +71,10 @@ services:
 
   reporting:
     build:
-      context: ../data_analysis/data_analysis
+      context: ../data_analysis
       dockerfile: Dockerfile
+      tags:
+        - wingsmc/work-planner-reporting:latest
     container_name: reporting
     ports:
       - "8080:8080"
@@ -87,7 +93,11 @@ services:
     restart: unless-stopped
 
   comms:
-    image: wingsmc/work-planner-comms:latest
+    build:
+      context: ../comms
+      dockerfile: Dockerfile
+      tags:
+        - wingsmc/work-planner-comms:latest
     container_name: comms
     ports:
       - "4000:4000"
