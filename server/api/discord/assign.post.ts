@@ -80,12 +80,12 @@ export default defineEventHandler(async (event) => {
       description: updatedTask.description,
     },
     assignee: {
-      id: userAccount.user.id,
       name: userAccount.user.name,
+      email: userAccount.user.email,
     },
     assigner: {
-      id: user.id,
       name: user.name,
+      email: user.email,
     },
   }
 })
