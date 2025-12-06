@@ -1,7 +1,5 @@
 #!/bin/sh
 
-pnpm exec prisma generate
-
 # 1. Run migrations (only applies pending migrations)
 echo "Running Prisma Migrations..."
 pnpm exec prisma migrate deploy

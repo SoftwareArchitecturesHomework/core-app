@@ -121,12 +121,14 @@ export default defineEventHandler(async (event) => {
         },
       })
       const manager = userWithManager?.manager
-      useComms().sendVacationRequest(
-        event,
-        user as User,
-        manager as User,
-        task as Task,
-      )
+      if (task.type === TaskType.VACATION && manager) {
+        useComms().sendVacationRequest(
+          event,
+          user as User,
+          manager as User,
+          task as Task,
+        )
+      }
     }
     return task
   } catch (error) {
